@@ -13,8 +13,8 @@ search_card = on_regex(r"查卡.+")
 @search_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
     print("start")
-    oriurl="http://81.70.240.186:3399/getCard?name="
-    regex ="查卡 (.+) (page)?([0-9]+)?"
+    oriurl= "http://ocgcard.fireinsect.top/getCard?name="
+    regex = "查卡 (.+) (page)?([0-9]+)?"
     text=event.get_message()
     search_group = re.match(regex,str(text))
     try:
