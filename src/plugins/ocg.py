@@ -35,25 +35,29 @@ async def _(bot: Bot, event: Event, state: T_State):
         result = ""
     except Exception as e:
         await search_card.send("查询失败")
-    for car in js['data']['cards']:
-        if car['typeMain'] == '怪兽':
-            result += car['name'] + "     " + car['type'] + "\n"
-            result += car['meta'] + "\n"
-            car['effect'] = re.sub(r"(.{50})", "\\1\r\n", car['effect'])
-            result += "效果：" + car['effect'] + "\n"
-            result += "\n"
-            result += "\n"
-        else:
+    if(js['data']['amount']==0):
+        await search_card.send("没找到捏~ 欧尼")
+    else:
+        for car in js['data']['cards']:
+            if car['typeMain'] == '怪兽':
+                result += car['name'] + "     " + car['type'] + "\n"
+                result += car['meta'] + "\n"
+                car['effect'] = re.sub(r"(.{50})", "\\1\r\n", car['effect'])
+                result += "效果：" + car['effect'] + "\n"
+                result += "\n"
+                result += "\n"
+            else:
 
-            result += car['name'] + "     " + car['type'] + "\n"
-            car['effect'] = re.sub(r"(.{50})", "\\1\r\n", car['effect'])
-            result += "效果：" + car['effect'] + "\n"
-            result += "\n"
-            result += "\n"
-    await search_card.finish(Message([{
-        "type": "image",
-        "data": {
-            "file": f"base64://{str(image_to_base64(text_to_image2(result)), encoding='utf-8')}"
-        }
-    }]))
+                result += car['name'] + "     " + car['type'] + "\n"
+                car['effect'] = re.sub(r"(.{50})", "\\1\r\n", car['effect'])
+                result += "效果：" + car['effect'] + "\n"
+                result += "\n"
+                result += "\n"
+        page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页",js['data']['amount'],js['data']['nowNum'],js['data']['pageNum'])
+        await search_card.finish(Message([{
+            "type": "image",
+            "data": {
+                "file": f"base64://{str(image_to_base64(text_to_image2(result,page_text)), encoding='utf-8')}"
+            }
+        }]))
 
