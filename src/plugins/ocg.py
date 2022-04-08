@@ -14,6 +14,7 @@ search_card = on_regex(r"查卡.+")
 async def _(bot: Bot, event: Event, state: T_State):
     print("start")
     oriurl= "http://ocgcard.fireinsect.top/getCard?name="
+    # oriurl= "http://localhost:3399/getCard?name="
     regex = "查卡 (.+) (page)?([0-9]+)?"
     text=event.get_message()
     search_group = re.match(regex,str(text))
@@ -39,9 +40,14 @@ async def _(bot: Bot, event: Event, state: T_State):
         await search_card.send("没找到捏~ 欧尼")
     else:
         for car in js['data']['cards']:
-            if car['typeMain'] == '怪兽':
+            if car['mainType'] == '怪兽':
                 result += car['name'] + "     " + car['type'] + "\n"
-                result += car['meta'] + "\n"
+                if(car['def']==None):
+                    result += car['level'] + ' / ATK: ' + car['atk'] + ' / : ' + car[
+                        'zz'] + ' / ' + car['attribute'] + "\n"
+                else:
+                    result += car['level'] + ' / ATK: ' + car['atk'] + ' / DEF: ' + car['def'] + ' / : ' + car[
+                        'zz'] + ' / ' + car['attribute'] + "\n"
                 car['effect'] = re.sub(r"(.{50})", "\\1\r\n", car['effect'])
                 result += "效果：" + car['effect'] + "\n"
                 result += "\n"
