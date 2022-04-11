@@ -43,9 +43,9 @@ async def _(bot: Bot, event: Event, state: T_State):
             car['effect'] = car['effect'].replace('\r', '')
             if car['mainType'] == '怪兽':
                 if car['atk'] == "-2":
-                    car['atk'] = '∞'
+                    car['atk'] = '?'
                 if car['def'] == "-2":
-                    car['def'] = '∞'
+                    car['def'] = '?'
                 result += car['name'] + "     " + car['type'] + "\n"
                 if car['def'] is None:
                     result += car['level'] + ' / ATK: ' + car['atk'] + ' / : ' + car[
