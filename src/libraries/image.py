@@ -4,7 +4,6 @@ from io import BytesIO
 from PIL import ImageFont, ImageDraw, Image
 
 
-path = 'src/static/high_eq_image.png'
 fontpath = "src/static/msyh.ttc"
 
 
