@@ -40,10 +40,10 @@ def text_to_image(text):
     return i
 
 def text_to_image2(text,page_text):
-    font = ImageFont.truetype(fontpath, 24)
-    font_page=ImageFont.truetype(fontpath, 27)
-    padding = 10
-    margin = 27
+    font = ImageFont.truetype(fontpath, 28)
+    font_page=ImageFont.truetype(fontpath, 30)
+    padding = 30
+    margin = 33
     text_list = text.split('\n')
     max_width = 0
     for text in text_list:
