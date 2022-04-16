@@ -59,6 +59,7 @@ def text_to_image2(text,page_text):
     draw.text((padding, padding + j * (margin + h)), page_text, font=font_page, fill=(0, 0, 0))
     return i
 
+
 def image_to_base64(img, format='PNG'):
     output_buffer = BytesIO()
     img.save(output_buffer, format)

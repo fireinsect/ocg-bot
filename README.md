@@ -1,6 +1,10 @@
 # 这里是ocg-bot使用指南哟~
 
 当前版本尚在初期，功能和使用上尚不完善qwq，请轻点蹂躏~
+## 0.文件准备
+进入https://github.com/fireinsect/ocg-bot 点上⭐并下载ocg-bot主体
+
+将ygo内pics文件夹拖入ocg-bot/src/static中（配置图片文件）
 
 ## 1.安装Python
 

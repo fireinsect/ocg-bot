@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import requests
@@ -46,7 +47,7 @@ async def _(bot: Bot, event: Event, state: T_State):
                     car['atk'] = '?'
                 if car['def'] == "-2":
                     car['def'] = '?'
-                result += car['name'] + "     " + car['type'] + "\n"
+                result += car['name'] + "     " + car['type'] + "    id-"+ str(car['cardId']) + "\n"
                 if car['def'] is None:
                     result += car['level'] + ' / ATK: ' + car['atk'] + ' / : ' + car[
                         'zz'] + ' / ' + car['attribute'] + "\n"
@@ -59,16 +60,33 @@ async def _(bot: Bot, event: Event, state: T_State):
                 result += "\n"
             else:
 
-                result += car['name'] + "     " + car['type'] + "\n"
+                result += car['name'] + "     " + car['type'] + "    id-"+str(car['cardId']) + "\n"
                 car['effect'] = re.sub(r"(.{50})", "\\1\n", car['effect'])
                 result += "效果：" + car['effect'] + "\n"
                 result += "\n"
                 result += "\n"
-        page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页", js['data']['amount'], js['data']['nowNum'],
-                               js['data']['pageNum'])
-        await search_card.finish(Message([{
-            "type": "image",
-            "data": {
-                "file": f"base64://{str(image_to_base64(text_to_image2(result, page_text)), encoding='utf-8')}"
+        if js['data']['amount'] == 1 and os.path.exists('src/static/pics/'+str(js['data']['cards'][0]['cardId'])+'.jpg'):
+
+            await search_card.finish(Message([
+                {
+                    "type": "text",
+                    "data": {
+                        "text": f"卡片id:{js['data']['cards'][0]['cardId']}\n {js['data']['cards'][0]['name']}\n"
+                    }
+                },
+                {
+                "type": "image",
+                "data": {
+                    "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/'+str(js['data']['cards'][0]['cardId'])+'.jpg')), encoding='utf-8')}"
+                }
             }
-        }]))
+            ]))
+        else:
+            page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页",  js['data']['amount'], js['data']['nowNum'],
+                                   js['data']['pageNum'])
+            await search_card.finish(Message([{
+                "type": "image",
+                "data": {
+                    "file": f"base64://{str(image_to_base64(text_to_image2(result, page_text)), encoding='utf-8')}"
+                }
+            }]))
