@@ -26,7 +26,6 @@ driver.config.help_text = {}
 
 
 nonebot.load_plugins("src/plugins")
-nonebot.load_plugins("src/plugins/nonebot_plugin_admin")
 
 # Modify some config / config depends on loaded configs
 # 
