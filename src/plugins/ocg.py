@@ -8,14 +8,14 @@ from nonebot.adapters.cqhttp import Message, Event, Bot
 from nonebot import on_command, on_regex
 from src.libraries.image import *
 
-search_card = on_regex(r"查卡.+")
+oriurl = "http://ocgcard.fireinsect.top/"
+# oriurl= "http://localhost:3399/getCard?name="
 
+search_card = on_regex(r"^查卡.+")
 
 @search_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
     print("start")
-    oriurl = "http://ocgcard.fireinsect.top/getCard?name="
-    # oriurl= "http://localhost:3399/getCard?name="
     regex = "查卡 (.+) (page)?([0-9]+)?"
     text = event.get_message()
     search_group = re.match(regex, str(text))
@@ -27,18 +27,37 @@ async def _(bot: Bot, event: Event, state: T_State):
         print(search_group.groups()[2])
     try:
         name = search_group.groups()[0]
-        page = int(search_group.groups()[2])
-        if page is None:
-            url = oriurl + search_group.groups()[0]
-        else:
-            url = oriurl + search_group.groups()[0] + "&page=" + search_group.groups()[2]
+        page = search_group.groups()[2]
+        url = oriurl + "getCard?name=" + name + "&page=" + page
         result = requests.get(url).text
         js = json.loads(result)
-        result = ""
     except Exception as e:
         await search_card.send("查询失败")
+    await send(js)
+
+
+id_card = on_regex(r"^查id.+")
+
+@id_card.handle()
+async def _(bot: Bot, event: Event, state: T_State):
+    print("start2")
+    regex = "查id ([0-9]+)"
+    text = event.get_message()
+    search_group = re.match(regex, str(text))
+    try:
+        id = search_group.groups()[0]
+        url = oriurl + "searchCardId?cardId=" + id
+        result = requests.get(url).text
+        js = json.loads(result)
+    except Exception as e:
+        await search_card.send("查询失败")
+    await send(js)
+
+
+async def send(js):
+    result = ""
     if js['data']['amount'] == 0:
-        await search_card.send("没找到捏~ 欧尼")
+        await search_card.send("没找到捏~ 欧尼酱~")
     else:
         for car in js['data']['cards']:
             car['effect'] = car['effect'].replace('\r', '')
@@ -47,7 +66,7 @@ async def _(bot: Bot, event: Event, state: T_State):
                     car['atk'] = '?'
                 if car['def'] == "-2":
                     car['def'] = '?'
-                result += car['name'] + "     " + car['type'] + "    id-"+ str(car['cardId']) + "\n"
+                result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "\n"
                 if car['def'] is None:
                     result += car['level'] + ' / ATK: ' + car['atk'] + ' / : ' + car[
                         'zz'] + ' / ' + car['attribute'] + "\n"
@@ -60,12 +79,13 @@ async def _(bot: Bot, event: Event, state: T_State):
                 result += "\n"
             else:
 
-                result += car['name'] + "     " + car['type'] + "    id-"+str(car['cardId']) + "\n"
+                result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "\n"
                 car['effect'] = re.sub(r"(.{50})", "\\1\n", car['effect'])
                 result += "效果：" + car['effect'] + "\n"
                 result += "\n"
                 result += "\n"
-        if js['data']['amount'] == 1 and os.path.exists('src/static/pics/'+str(js['data']['cards'][0]['cardId'])+'.jpg'):
+        if js['data']['amount'] == 1 and os.path.exists(
+                'src/static/pics/' + str(js['data']['cards'][0]['cardId']) + '.jpg'):
 
             await search_card.finish(Message([
                 {
@@ -75,14 +95,14 @@ async def _(bot: Bot, event: Event, state: T_State):
                     }
                 },
                 {
-                "type": "image",
-                "data": {
-                    "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/'+str(js['data']['cards'][0]['cardId'])+'.jpg')), encoding='utf-8')}"
+                    "type": "image",
+                    "data": {
+                        "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data']['cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
+                    }
                 }
-            }
             ]))
         else:
-            page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页",  js['data']['amount'], js['data']['nowNum'],
+            page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页", js['data']['amount'], js['data']['nowNum'],
                                    js['data']['pageNum'])
             await search_card.finish(Message([{
                 "type": "image",
