@@ -29,10 +29,10 @@ poke = on_notice(rule=_group_poke, priority=10, block=True)
 async def _(bot: Bot, event: Event, state: T_State):
     if event.__getattribute__('group_id') is None:
         event.__delattr__('group_id')
-    await poke.send(Message([{
-        "type": "poke",
-        "data": {
-            "qq": f"{event.sender_id}"
-        }
-    }]))
-
+    if int(bot.self_id) != event.sender_id:
+        await poke.send(Message([{
+            "type": "poke",
+            "data": {
+                "qq": f"{event.sender_id}"
+            }
+        }]))
