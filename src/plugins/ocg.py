@@ -1,4 +1,5 @@
 import os
+import random
 import re
 import json
 import requests
@@ -11,7 +12,14 @@ from src.libraries.image import *
 oriurl = "http://ocgcard.fireinsect.top/"
 # oriurl= "http://localhost:3399/getCard?name="
 
+noSearchText = [
+    "没找到捏~ 欧尼酱~",
+    "咦？这张卡不存在呢",
+    "哔哔~卡片不存在"
+]
+
 search_card = on_regex(r"^查卡.+")
+
 
 @search_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
@@ -32,11 +40,12 @@ async def _(bot: Bot, event: Event, state: T_State):
         result = requests.get(url).text
         js = json.loads(result)
     except Exception as e:
-        await search_card.send("查询失败")
+        await search_card.send("咿呀？查询失败了呢")
     await send(js)
 
 
 id_card = on_regex(r"^查id.+")
+
 
 @id_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
@@ -50,14 +59,15 @@ async def _(bot: Bot, event: Event, state: T_State):
         result = requests.get(url).text
         js = json.loads(result)
     except Exception as e:
-        await search_card.send("查询失败")
+        await search_card.send("咿呀？查询失败了呢")
     await send(js)
 
 
 async def send(js):
     result = ""
     if js['data']['amount'] == 0:
-        await search_card.send("没找到捏~ 欧尼酱~")
+        r = random.randint(0, len(noSearchText) - 1)
+        await search_card.send(noSearchText[r])
     else:
         for car in js['data']['cards']:
             car['effect'] = car['effect'].replace('\r', '')
