@@ -9,8 +9,8 @@ from nonebot.adapters.cqhttp import Message, Event, Bot
 from nonebot import on_command, on_regex
 from src.libraries.image import *
 
-oriurl = "http://ocgcard.fireinsect.top/"
-# oriurl= "http://localhost:3399/getCard?name="
+# oriurl = "http://ocgcard.fireinsect.top/"
+oriurl= "http://localhost:3399/"
 
 noSearchText = [
     "没找到捏~ 欧尼酱~",
@@ -62,6 +62,16 @@ async def _(bot: Bot, event: Event, state: T_State):
         await search_card.send("咿呀？查询失败了呢")
     await send(js)
 
+randomCard = on_command('随机一卡', aliases={'抽一张卡'})
+@randomCard.handle()
+async def _(bot: Bot, event: Event, state: T_State):
+    try:
+        url = oriurl + "randomCard"
+        result = requests.get(url).text
+        js = json.loads(result)
+    except Exception as e:
+        await search_card.send("咿呀？卡组被送进异次元了呢~")
+    await send(js)
 
 async def send(js):
     result = ""
