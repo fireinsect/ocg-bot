@@ -8,15 +8,34 @@ from nonebot.typing import T_State
 from nonebot.adapters.cqhttp import Message, Event, Bot
 from nonebot import on_command, on_regex
 from src.libraries.image import *
+from src.libraries.tool import hash
 
 # oriurl = "http://ocgcard.fireinsect.top/"
-oriurl= "http://localhost:3399/"
+oriurl = "http://localhost:3399/"
 
 noSearchText = [
     "没找到捏~ 欧尼酱~",
     "咦？这张卡不存在呢",
     "哔哔~卡片不存在"
 ]
+
+
+def card_txt(card):
+    return Message([
+        {
+            "type": "text",
+            "data": {
+                "text": f"{card['id']}. {card['name']}\n"
+            }
+        },
+        {
+            "type": "image",
+            "data": {
+                "file": f"http://ocgcard.daily.fireinsect.top/deck/{card['id']}.jpg"
+            }
+        }
+    ])
+
 
 search_card = on_regex(r"^查卡.+")
 
@@ -62,7 +81,10 @@ async def _(bot: Bot, event: Event, state: T_State):
         await search_card.send("咿呀？查询失败了呢")
     await send(js)
 
+
 randomCard = on_command('随机一卡', aliases={'抽一张卡'})
+
+
 @randomCard.handle()
 async def _(bot: Bot, event: Event, state: T_State):
     try:
@@ -72,6 +94,7 @@ async def _(bot: Bot, event: Event, state: T_State):
     except Exception as e:
         await search_card.send("咿呀？卡组被送进异次元了呢~")
     await send(js)
+
 
 async def send(js):
     result = ""
@@ -130,3 +153,35 @@ async def send(js):
                     "file": f"base64://{str(image_to_base64(text_to_image2(result, page_text)), encoding='utf-8')}"
                 }
             }]))
+
+
+wm_list = ['同调', '仪式', '融合', '超量', '链接', '顶G', '重坑', '干饭']
+
+dailycard = on_command('今日游戏王', aliases={'今日卡运'})
+
+
+@dailycard.handle()
+async def _(bot: Bot, event: Event, state: T_State):
+    qq = int(event.get_user_id())
+    point = hash(qq)
+    daily_point_map = point % 100
+    wm_value = []
+    lend = len(wm_list)
+    for i in range(lend):
+        wm_value.append(point & 3)
+        point >>= 2
+    s = f"今日人品值：{daily_point_map}\n"
+    for i in range(lend):
+        if wm_value[i] == 3:
+            s += f'宜 {wm_list[i]}\n'
+        elif wm_value[i] == 0:
+            s += f'忌 {wm_list[i]}\n'
+    s += "小虫提醒您：打牌要保持良好心态哟\n今日卡牌："
+    card = obj[point % len(obj)]
+    await dailycard.finish(
+        Message([
+              {"type": "text", "data": {"text": s}}
+             ] + card_txt(card)),at_sender=True)
+
+
+obj = requests.get(oriurl + "searchDaily").json()['data']
