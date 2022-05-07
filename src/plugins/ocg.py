@@ -10,8 +10,8 @@ from nonebot import on_command, on_regex
 from src.libraries.image import *
 from src.libraries.tool import hash
 
-# oriurl = "http://ocgcard.fireinsect.top/"
-oriurl = "http://localhost:3399/"
+oriurl = "http://ocgcard.fireinsect.top/"
+# oriurl = "http://localhost:3399/"
 
 noSearchText = [
     "没找到捏~ 欧尼酱~",
