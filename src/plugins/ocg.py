@@ -37,6 +37,23 @@ def card_txt(card):
     ])
 
 
+ocghelp = on_command('ygo help', aliases={'ygo 帮助'})
+
+@ocghelp.handle()
+async def _(bot: Bot, event: Event, state: T_State):
+    txt = '''欧尼酱~你可以对查卡姬说如下命令哟~
+    今日卡运 查看今天打牌运势~
+    查卡 <卡名> (页码) 查询对应卡牌~（卡名内不要出现空格哟~）
+    查id <卡片id> 查询对应id~
+    (查询功能不要忘记指令之后的空格哟~)
+    随机一卡(抽一张卡)'''
+    await ocghelp.send(Message([{
+        "type": "image",
+        "data": {
+            "file": f"base64://{str(image_to_base64(text_to_image(txt)), encoding='utf-8')}"
+        }
+    }]))
+
 search_card = on_regex(r"^查卡.+")
 
 
@@ -155,9 +172,9 @@ async def send(js):
             }]))
 
 
-wm_list = ['同调', '仪式', '融合', '超量', '链接', '顶G', '重坑', '干饭']
+wm_list = ['同调', '仪式', '融合', '超量', '链接', '灵摆', '顶G', '重坑', '干饭']
 
-dailycard = on_command('今日游戏王', aliases={'今日卡运'})
+dailycard = on_command('今日游戏王', aliases={'今日卡运', '今日牌运'})
 
 
 @dailycard.handle()

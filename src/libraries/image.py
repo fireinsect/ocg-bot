@@ -23,8 +23,8 @@ def draw_text(img_pil, text, offset_x):
 
 def text_to_image(text):
     font = ImageFont.truetype(fontpath, 24)
-    padding = 10
-    margin = 4
+    padding = 15
+    margin = 10
     text_list = text.split('\n')
     max_width = 0
     for text in text_list:
