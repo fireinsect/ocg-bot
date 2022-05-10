@@ -43,9 +43,9 @@ ocghelp = on_command('ygo help', aliases={'ygo 帮助'})
 async def _(bot: Bot, event: Event, state: T_State):
     txt = '''欧尼酱~你可以对查卡姬说如下命令哟~
     今日卡运 查看今天打牌运势~
-    查卡 <卡名> (页码) 查询对应卡牌~（卡名内不要出现空格哟~）
+    查卡 <ygo卡名> (页码) 查询对应卡牌~（卡名内不要出现空格哟~）
     查id <卡片id> 查询对应id~
-    (查询功能不要忘记指令之后的空格哟~)
+    (查询功能不要忘记指令之后的空格哟~ 卡名特指ygo卡名而不是查卡器卡名捏~)
     随机一卡(抽一张卡)'''
     await ocghelp.send(Message([{
         "type": "image",
