@@ -10,8 +10,8 @@ from nonebot import on_command, on_regex
 from src.libraries.image import *
 from src.libraries.tool import hash
 
-oriurl = "http://ocgcard.fireinsect.top/"
-# oriurl = "http://localhost:3399/"
+# oriurl = "http://ocgcard.fireinsect.top/"
+oriurl = "http://localhost:3399/"
 
 noSearchText = [
     "没找到捏~ 欧尼酱~",
@@ -42,17 +42,46 @@ ocghelp = on_command('ygo help', aliases={'ygo 帮助'})
 @ocghelp.handle()
 async def _(bot: Bot, event: Event, state: T_State):
     txt = '''欧尼酱~你可以对查卡姬说如下命令哟~
-    今日卡运 查看今天打牌运势~
-    查卡 <ygo卡名> (页码) 查询对应卡牌~（卡名内不要出现空格哟~）
-    查id <卡片id> 查询对应id~
-    (查询功能不要忘记指令之后的空格哟~ 卡名特指ygo卡名而不是查卡器卡名捏~)
-    随机一卡(抽一张卡)'''
+    随机一卡(抽一张卡)
+    今日卡运   查看今天打牌运势~
+    查卡 <ygo卡名> (页码)   查询对应卡牌~
+    en查卡(英文查卡) <英文卡名> (页码)   使用英文查询对应卡牌~
+    查id <卡片id>   查询对应id~
+    (查询功能不要忘记指令之后的空格哟~ 卡名特指ygo卡名而不是查卡器卡名捏~)'''
     await ocghelp.send(Message([{
         "type": "image",
         "data": {
             "file": f"base64://{str(image_to_base64(text_to_image(txt)), encoding='utf-8')}"
         }
     }]))
+
+
+ensearch_card = on_command("en查卡",aliases={'英文查卡'})
+
+
+@ensearch_card.handle()
+async def _(bot: Bot, event: Event, state: T_State):
+    print("start")
+    text = event.get_message()
+    regex = "(.+) (page)?([0-9]+)?"
+    search_group = re.match(regex, str(text))
+    try:
+        print(search_group.groups()[2])
+    except Exception as e:
+        text = text + " 1"
+        search_group = re.match(regex, str(text))
+    try:
+        if search_group.groups()[2] is None:
+            text = text + " 1"
+            search_group = re.match(regex, str(text))
+        name = search_group.groups()[0]
+        page = search_group.groups()[2]
+        url = oriurl + "getCardByEn?enName=" + name + "&page=" + page
+        result = requests.get(url).text
+        js = json.loads(result)
+    except Exception as e:
+        await ensearch_card.send("咿呀？查询失败了呢")
+    await send(js)
 
 search_card = on_regex(r"^查卡.+")
 
@@ -66,10 +95,13 @@ async def _(bot: Bot, event: Event, state: T_State):
     try:
         print(search_group.groups()[2])
     except Exception as e:
-        text = text + " page1"
+        text = text + " 1"
         search_group = re.match(regex, str(text))
-        print(search_group.groups()[2])
+
     try:
+        if search_group.groups()[2] is None:
+            text = text + " 1"
+            search_group = re.match(regex, str(text))
         name = search_group.groups()[0]
         page = search_group.groups()[2]
         url = oriurl + "getCard?name=" + name + "&page=" + page
@@ -120,13 +152,16 @@ async def send(js):
         await search_card.send(noSearchText[r])
     else:
         for car in js['data']['cards']:
+            result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "\n"
+            if car['enName'] is not None:
+                result += "英文卡名-" + car['enName'] + "     " + "日文卡名-" + car['jpName']+"\n"
             car['effect'] = car['effect'].replace('\r', '')
             if car['mainType'] == '怪兽':
                 if car['atk'] == "-2":
                     car['atk'] = '?'
                 if car['def'] == "-2":
                     car['def'] = '?'
-                result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "\n"
+
                 if car['def'] is None:
                     result += car['level'] + ' / ATK: ' + car['atk'] + ' / : ' + car[
                         'zz'] + ' / ' + car['attribute'] + "\n"
@@ -138,8 +173,6 @@ async def send(js):
                 result += "\n"
                 result += "\n"
             else:
-
-                result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "\n"
                 car['effect'] = re.sub(r"(.{50})", "\\1\n", car['effect'])
                 result += "效果：" + car['effect'] + "\n"
                 result += "\n"
@@ -152,6 +185,8 @@ async def send(js):
                     "type": "text",
                     "data": {
                         "text": f"卡片id:{js['data']['cards'][0]['cardId']}\n {js['data']['cards'][0]['name']}\n"
+                                # f"jp:{js['data']['cards'][0]['jpName']}\n"
+                                # f"en:{js['data']['cards'][0]['enName']}\n"
                     }
                 },
                 {
