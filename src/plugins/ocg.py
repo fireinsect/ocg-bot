@@ -37,17 +37,17 @@ def card_txt(card):
     ])
 
 
-ocghelp = on_command('ygo help', aliases={'ygo 帮助'})
+ocghelp = on_command('ygo help', aliases={'ygo 帮助', 'ygohelp', 'ygo帮助'})
+
 
 @ocghelp.handle()
 async def _(bot: Bot, event: Event, state: T_State):
     txt = '''欧尼酱~你可以对查卡姬说如下命令哟~
     随机一卡(抽一张卡)
     今日卡运   查看今天打牌运势~
-    查卡 <ygo卡名> (页码)   查询对应卡牌~
-    en查卡(英文查卡) <英文卡名> (页码)   使用英文查询对应卡牌~
-    查id <卡片id>   查询对应id~
-    (查询功能不要忘记指令之后的空格哟~ 卡名特指ygo卡名而不是查卡器卡名捏~)'''
+    查卡 ygo卡名 (页码)   查询对应卡牌~
+    en查卡(英文查卡) 英文卡名 (页码)   使用英文查询对应卡牌~
+    查id 卡片id   查询对应id~'''
     await ocghelp.send(Message([{
         "type": "image",
         "data": {
@@ -56,7 +56,7 @@ async def _(bot: Bot, event: Event, state: T_State):
     }]))
 
 
-ensearch_card = on_command("en查卡",aliases={'英文查卡'})
+ensearch_card = on_command("en查卡", aliases={'英文查卡'})
 
 
 @ensearch_card.handle()
@@ -83,15 +83,16 @@ async def _(bot: Bot, event: Event, state: T_State):
         await ensearch_card.send("咿呀？查询失败了呢")
     await send(js)
 
-search_card = on_regex(r"^查卡.+")
+
+search_card = on_command("查卡")
 
 
 @search_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
     print("start")
-    regex = "查卡 (.+) (page)?([0-9]+)?"
-    text = event.get_message()
-    search_group = re.match(regex, str(text))
+    regex = "(.+) (page)?([0-9]+)?"
+    text = str(event.get_message()).strip()
+    search_group = re.match(regex, text)
     try:
         print(search_group.groups()[2])
     except Exception as e:
@@ -112,15 +113,15 @@ async def _(bot: Bot, event: Event, state: T_State):
     await send(js)
 
 
-id_card = on_regex(r"^查id.+")
+id_card = on_command("查id")
 
 
 @id_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
     print("start2")
-    regex = "查id ([0-9]+)"
-    text = event.get_message()
-    search_group = re.match(regex, str(text))
+    regex = "([0-9]+)"
+    text = str(event.get_message()).strip()
+    search_group = re.match(regex, text)
     try:
         id = search_group.groups()[0]
         url = oriurl + "searchCardId?cardId=" + id
@@ -154,7 +155,7 @@ async def send(js):
         for car in js['data']['cards']:
             result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "\n"
             if car['enName'] is not None:
-                result += "英文卡名-" + car['enName'] + "     " + "日文卡名-" + car['jpName']+"\n"
+                result += "英文卡名-" + car['enName'] + "     " + "日文卡名-" + car['jpName'] + "\n"
             car['effect'] = car['effect'].replace('\r', '')
             if car['mainType'] == '怪兽':
                 if car['atk'] == "-2":
@@ -185,8 +186,8 @@ async def send(js):
                     "type": "text",
                     "data": {
                         "text": f"卡片id:{js['data']['cards'][0]['cardId']}\n {js['data']['cards'][0]['name']}\n"
-                                # f"jp:{js['data']['cards'][0]['jpName']}\n"
-                                # f"en:{js['data']['cards'][0]['enName']}\n"
+                        # f"jp:{js['data']['cards'][0]['jpName']}\n"
+                        # f"en:{js['data']['cards'][0]['enName']}\n"
                     }
                 },
                 {
@@ -228,12 +229,12 @@ async def _(bot: Bot, event: Event, state: T_State):
             s += f'宜 {wm_list[i]}\n'
         elif wm_value[i] == 0:
             s += f'忌 {wm_list[i]}\n'
-    s += "小虫提醒您：打牌要保持良好心态哟\n今日卡牌："
     card = obj[point % len(obj)]
+    s += f"小虫提醒您：打牌要保持良好心态哟\n今日{card['type']}："
     await dailycard.finish(
         Message([
-              {"type": "text", "data": {"text": s}}
-             ] + card_txt(card)),at_sender=True)
+                    {"type": "text", "data": {"text": s}}
+                ] + card_txt(card)), at_sender=True)
 
 
 obj = requests.get(oriurl + "searchDaily").json()['data']
