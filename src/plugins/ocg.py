@@ -3,11 +3,13 @@ import random
 import re
 import json
 import requests
+from nonebot.adapters.cqhttp.event import Sender
 
 from nonebot.typing import T_State
 from nonebot.adapters.cqhttp import Message, Event, Bot
 from nonebot import on_command, on_regex
 from src.libraries.image import *
+from src.libraries.raiseCard import draw_card_text
 from src.libraries.tool import hash
 
 # oriurl = "http://ocgcard.fireinsect.top/"
@@ -20,7 +22,7 @@ noSearchText = [
 ]
 
 
-def card_txt(card):
+def card_txt(card,no):
     return Message([
         {
             "type": "text",
@@ -31,7 +33,7 @@ def card_txt(card):
         {
             "type": "image",
             "data": {
-                "file": f"http://ocgcard.daily.fireinsect.top/deck/{card['id']}.jpg"
+                "file": f"http://ocgcard.daily.fireinsect.top/deck/{card['id']}/{card['id']}-{no}.jpg"
             }
         }
     ])
@@ -56,12 +58,11 @@ async def _(bot: Bot, event: Event, state: T_State):
     }]))
 
 
-ensearch_card = on_command("en查卡", aliases={'英文查卡'})
+ensearch_card = on_command("en查卡 ", aliases={'英文查卡 '})
 
 
 @ensearch_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
-    print("start")
     text = event.get_message()
     regex = "(.+) (page)?([0-9]+)?"
     search_group = re.match(regex, str(text))
@@ -84,15 +85,15 @@ async def _(bot: Bot, event: Event, state: T_State):
     await send(js)
 
 
-search_card = on_command("查卡")
+search_card = on_command("查卡 ")
 
 
 @search_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
-    print("start")
     regex = "(.+) (page)?([0-9]+)?"
     text = str(event.get_message()).strip()
     search_group = re.match(regex, text)
+    print(text)
     try:
         print(search_group.groups()[2])
     except Exception as e:
@@ -113,12 +114,11 @@ async def _(bot: Bot, event: Event, state: T_State):
     await send(js)
 
 
-id_card = on_command("查id")
+id_card = on_command("查id ")
 
 
 @id_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
-    print("start2")
     regex = "([0-9]+)"
     text = str(event.get_message()).strip()
     search_group = re.match(regex, text)
@@ -208,13 +208,57 @@ async def send(js):
             }]))
 
 
-wm_list = ['同调', '仪式', '融合', '超量', '链接', '灵摆', '顶G', '重坑', '干饭']
+wm_list = ['同调', '仪式', '融合', '超量', '链接', '灵摆', '顶G', '重坑', '干饭', '开壶', '唠嗑', '摸鱼']
 
 dailycard = on_command('今日游戏王', aliases={'今日卡运', '今日牌运'})
 
 
 @dailycard.handle()
 async def _(bot: Bot, event: Event, state: T_State):
+    # 520专属
+    # s = f"今日人品值：-999\n"
+    # s += f'忌 出游\n'
+    # s += f'忌 同行\n'
+    # s += f'忌 520\n'
+    # s += f'忌 秀恩爱\n'
+    # s += f'忌 抛洒狗粮\n'
+    # s += f'宜 打牌（人品值+1099）\n'
+    # s += f"小虫告诉您：今天就适合打牌 我说的！\n今日卡牌："
+    # card = {
+    #     'id': 114514,
+    #     'name': "废物"
+    # }
+    # await dailycard.finish(
+    #     Message([
+    #                 {"type": "text", "data": {"text": s}}
+    #             ] + card_txt(card)), at_sender=True)
+
+    # 端午版
+    # qq = int(event.get_user_id())
+    # point = hash(qq)
+    # daily_point_map = point % 100
+    # if daily_point_map < 10:
+    #     daily_point_map += 60
+    # elif daily_point_map < 30:
+    #     daily_point_map += 40
+    # elif daily_point_map < 50:
+    #     daily_point_map += 20
+    # wm_value = []
+    # lend = len(wm_list)
+    # for i in range(lend):
+    #     wm_value.append(point & 2)
+    #     point >>= 2
+    # s = f"今日人品值：{daily_point_map}\n"
+    # for i in range(lend):
+    #     if wm_value[i] == 2:
+    #         s += f'宜 {wm_list[i]}\n'
+    # s += f'宜 吃粽子\n'
+    # if hash(qq)%150>145:
+    #     s += f'宜 找查卡姬唠\n'
+    # card = obj[point % len(obj)]
+    # s += f"今天是端午节哟，快快乐乐才是最重要哒！\n今日{card['type']}："
+
+    # 正常版本
     qq = int(event.get_user_id())
     point = hash(qq)
     daily_point_map = point % 100
@@ -231,10 +275,11 @@ async def _(bot: Bot, event: Event, state: T_State):
             s += f'忌 {wm_list[i]}\n'
     card = obj[point % len(obj)]
     s += f"小虫提醒您：打牌要保持良好心态哟\n今日{card['type']}："
+    no = point % int(card['nums'])
     await dailycard.finish(
         Message([
                     {"type": "text", "data": {"text": s}}
-                ] + card_txt(card)), at_sender=True)
+                ] + card_txt(card,no)), at_sender=True)
 
 
 obj = requests.get(oriurl + "searchDaily").json()['data']
