@@ -12,8 +12,8 @@ from src.libraries.image import *
 from src.libraries.raiseCard import draw_card_text
 from src.libraries.tool import hash
 
-# oriurl = "http://ocgcard.fireinsect.top/"
-oriurl = "http://localhost:3399/"
+oriurl = "http://ocgcard.fireinsect.top/"
+# oriurl = "http://localhost:3399/"
 
 noSearchText = [
     "没找到捏~ 欧尼酱~",
@@ -22,12 +22,12 @@ noSearchText = [
 ]
 
 
-def card_txt(card,no):
+def card_txt(card, no):
     return Message([
         {
             "type": "text",
             "data": {
-                "text": f"{card['id']}. {card['name']}\n"
+                "text": f"{card['id']}. {card['name']}-{no + 1}\n"
             }
         },
         {
@@ -261,6 +261,7 @@ async def _(bot: Bot, event: Event, state: T_State):
     # 正常版本
     qq = int(event.get_user_id())
     point = hash(qq)
+    daily = int(point)
     daily_point_map = point % 100
     wm_value = []
     lend = len(wm_list)
@@ -268,18 +269,33 @@ async def _(bot: Bot, event: Event, state: T_State):
         wm_value.append(point & 3)
         point >>= 2
     s = f"今日人品值：{daily_point_map}\n"
+    flag = 0
     for i in range(lend):
         if wm_value[i] == 3:
-            s += f'宜 {wm_list[i]}\n'
+            s += f'宜 {wm_list[i]}'
+            if flag % 2 == 0:
+                s += '　　'
+                flag += 1
+            else:
+                s += f'\n'
+                flag += 1
         elif wm_value[i] == 0:
-            s += f'忌 {wm_list[i]}\n'
-    card = obj[point % len(obj)]
+            s += f'忌 {wm_list[i]}'
+            if flag % 2 == 0:
+                s += '　　'
+                flag += 1
+            else:
+                s += f'\n'
+                flag += 1
+    if i == lend - 1 and flag % 2 == 1:
+        s += f'\n'
+    card = obj[daily % len(obj)]
     s += f"小虫提醒您：打牌要保持良好心态哟\n今日{card['type']}："
-    no = point % int(card['nums'])
+    no = daily % int(card['nums'])
     await dailycard.finish(
         Message([
                     {"type": "text", "data": {"text": s}}
-                ] + card_txt(card,no)), at_sender=True)
+                ] + card_txt(card, no)), at_sender=True)
 
 
 obj = requests.get(oriurl + "searchDaily").json()['data']
