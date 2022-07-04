@@ -11,7 +11,6 @@ from nonebot import on_command, on_regex
 from src.libraries.image import *
 from src.libraries.raiseCard import draw_card_text
 from src.libraries.tool import hash
-
 oriurl = "http://ocgcard.fireinsect.top/"
 # oriurl = "http://localhost:3399/"
 
@@ -208,7 +207,7 @@ async def send(js):
             }]))
 
 
-wm_list = ['同调', '仪式', '融合', '超量', '链接', '灵摆', '顶G', '重坑', '干饭', '开壶', '唠嗑', '摸鱼']
+wm_list = ['同调', '仪式', '融合', '超量', '链接', '灵摆', '顶 G', '重坑', '干饭', '开壶', '唠嗑', '摸鱼']
 
 dailycard = on_command('今日游戏王', aliases={'今日卡运', '今日牌运'})
 
@@ -287,8 +286,8 @@ async def _(bot: Bot, event: Event, state: T_State):
             else:
                 s += f'\n'
                 flag += 1
-    if i == lend - 1 and flag % 2 == 1:
-        s += f'\n'
+        if i == lend - 1 and flag % 2 == 1:
+            s += f'\n'
     card = obj[daily % len(obj)]
     s += f"小虫提醒您：打牌要保持良好心态哟\n今日{card['type']}："
     no = daily % int(card['nums'])

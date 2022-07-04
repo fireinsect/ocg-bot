@@ -41,13 +41,48 @@ Windows系统下载专供Windows的python，如果的linux系统选择下载Linu
 
 运行成功后，我们需要和CQ-HTTP进行连接
 
+如果你使用服务器进行机器人的运行，可以使用宝塔面板来简化操作。
+
+具体为安装宝塔面板，进入软件商店，搜索Python项目管理，安装并在设置中下载Python3.7.9以上版本。
+
+进入项目管理，新建项目路径设置为机器人文件夹路径(已解压),python框架、python启动方式,启动文件为同目录下的**bot.python**文件,勾选是否安装模块依赖
+
+等待依赖安装完成即可成功运行项目
+
 ## 3.连接CQ-HTTP
 
-前往 https://github.com/Mrs4s/go-cqhttp > Releases，下载CQ-HTTP的对应操作系统的执行文件。cq在初次运行时会询问代理方式，我们使用反向websocket代理来实现qq机器人。
+前往 https://github.com/Mrs4s/go-cqhttp > Releases，下载CQ-HTTP的对应操作系统的执行文件。
+
+使用cd指令进入所下载的文件存放路径(已解压)
+Linux输入./cqhttp运行文件
+
+Windows直接运行文件
+
+cq在初次运行时会询问代理方式，我们使用
+
+3.反向websocket代理 来实现qq机器人。
 
 之后设置自己的qq号与密码来完成cq的部署。
 
-之后我们的bot上会显示连接成功的讯息，这就代表机器人部署成功了
+此时我们需要修改反向代理的地址。
+
+修改同目录下生成的config.yml文件,修改：
+```yml
+- ws-reverse:
+      # 反向WS Universal 地址
+      # 注意 修改这里
+      universal: ws://127.0.0.1:10219/cqhttp/ws
+      # 反向WS API 地址
+      api: ws://your_websocket_api.server
+      # 反向WS Event 地址
+      event: ws://your_websocket_event.server
+      # 重连间隔 单位毫秒
+      reconnect-interval: 3000
+      middlewares:
+        <<: *default # 引用默认中间件
+```
+
+重新运行,之后我们的bot上会显示连接成功的讯息，这就代表机器人部署成功了
 
 
 

@@ -32,15 +32,19 @@ async def _(bot: Bot, event: Event, state: T_State, ):
             }
         }]))
 
-# text = on_command('test')
-#
-#
-# @text.handle()
-# async def _(bot: Bot, event: Event, state: T_State):
-#     id=41
-#     await text.send(Message([{
-#         "type": "image",
-#         "data": {
-#             "file": f"http://ocgcard.daily.fireinsect.top/dailycard/41.jpg"
-#         }
-#     }]))
+text = on_command('test')
+
+
+@text.handle()
+async def _(bot: Bot, event: Event, state: T_State):
+    # id=41
+    # await text.send(Message([{
+    #     "type": "image",
+    #     "data": {
+    #         "file": f"http://ocgcard.daily.fireinsect.top/dailycard/41.jpg"
+    #     }
+    # }]))
+    print(event.get_message)
+    print(type(event))
+    a=event
+    print(event.to_me)
