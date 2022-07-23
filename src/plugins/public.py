@@ -7,8 +7,6 @@ from nonebot.typing import T_State
 from nonebot.adapters.cqhttp import Message, Event, Bot
 from nonebot.exception import IgnoredException
 from nonebot.message import event_preprocessor
-from src.libraries.image import *
-from random import randint
 
 
 @event_preprocessor

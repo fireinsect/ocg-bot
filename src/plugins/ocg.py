@@ -3,14 +3,13 @@ import random
 import re
 import json
 import requests
-from nonebot.adapters.cqhttp.event import Sender
-
 from nonebot.typing import T_State
 from nonebot.adapters.cqhttp import Message, Event, Bot
 from nonebot import on_command, on_regex
 from src.libraries.image import *
 from src.libraries.raiseCard import draw_card_text
 from src.libraries.tool import hash
+
 oriurl = "http://ocgcard.fireinsect.top/"
 # oriurl = "http://localhost:3399/"
 
@@ -46,7 +45,7 @@ async def _(bot: Bot, event: Event, state: T_State):
     txt = '''欧尼酱~你可以对查卡姬说如下命令哟~
     随机一卡(抽一张卡)
     今日卡运   查看今天打牌运势~
-    查卡 ygo卡名 (页码)   查询对应卡牌~
+    查卡 ygo卡名 (怪兽|魔法|陷阱) (页码)   查询对应卡牌~
     en查卡(英文查卡) 英文卡名 (页码)   使用英文查询对应卡牌~
     查id 卡片id   查询对应id~'''
     await ocghelp.send(Message([{
@@ -92,7 +91,6 @@ async def _(bot: Bot, event: Event, state: T_State):
     regex = "(.+) (page)?([0-9]+)?"
     text = str(event.get_message()).strip()
     search_group = re.match(regex, text)
-    print(text)
     try:
         print(search_group.groups()[2])
     except Exception as e:
@@ -103,9 +101,18 @@ async def _(bot: Bot, event: Event, state: T_State):
         if search_group.groups()[2] is None:
             text = text + " 1"
             search_group = re.match(regex, str(text))
-        name = search_group.groups()[0]
         page = search_group.groups()[2]
-        url = oriurl + "getCard?name=" + name + "&page=" + page
+        textNext = search_group.groups()[0]
+        search_group2 = re.search(r" (?:魔法|怪兽|陷阱)\Z", textNext)
+        if search_group2 is None:
+            name = textNext
+            url = oriurl + "getCard?name={0}&page={1}".format(name, page)
+        else:
+            type = search_group2.group(0).strip()
+            name = re.sub(r" (?:魔法|怪兽|陷阱)\Z", "", textNext).strip()
+            url = oriurl + "getCard?name={0}&type={1}&page={2}".format(name, type, page)
+        print(name)
+        print(url)
         result = requests.get(url).text
         js = json.loads(result)
     except Exception as e:
@@ -177,8 +184,9 @@ async def send(js):
                 result += "效果：" + car['effect'] + "\n"
                 result += "\n"
                 result += "\n"
-        if js['data']['amount'] == 1 and os.path.exists(
-                'src/static/pics/' + str(js['data']['cards'][0]['cardId']) + '.jpg'):
+        pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
+            js['data']['cards'][0]['cardId']) + '.jpg'
+        if js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
 
             await search_card.finish(Message([
                 {
@@ -192,7 +200,7 @@ async def send(js):
                 {
                     "type": "image",
                     "data": {
-                        "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data']['cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
+                        "file": f"base64://{str(image_to_base64(Image.open(BytesIO(requests.get(pics_url).content))), encoding='utf-8')}"
                     }
                 }
             ]))
@@ -289,7 +297,7 @@ async def _(bot: Bot, event: Event, state: T_State):
         if i == lend - 1 and flag % 2 == 1:
             s += f'\n'
     card = obj[daily % len(obj)]
-    s += f"小虫提醒您：打牌要保持良好心态哟\n今日{card['type']}："
+    s += f'小虫提醒您：打牌要保持良好心态哟\n今日{card["type"]}：'
     no = daily % int(card['nums'])
     await dailycard.finish(
         Message([
