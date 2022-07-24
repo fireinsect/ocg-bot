@@ -159,7 +159,8 @@ async def send(js):
         await search_card.send(noSearchText[r])
     else:
         for car in js['data']['cards']:
-            result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "\n"
+            result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "    " + car[
+                'forbidden'] + "\n"
             if car['enName'] is not None:
                 result += "英文卡名-" + car['enName'] + "     " + "日文卡名-" + car['jpName'] + "\n"
             car['effect'] = car['effect'].replace('\r', '')
@@ -186,13 +187,15 @@ async def send(js):
                 result += "\n"
         pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
             js['data']['cards'][0]['cardId']) + '.jpg'
+        # if js['data']['amount'] == 1 and os.path.exists('src/static/pics/' + str(js['data']['cards'][0]['cardId'])
+        # + '.jpg'):
         if js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
 
             await search_card.finish(Message([
                 {
                     "type": "text",
                     "data": {
-                        "text": f"卡片id:{js['data']['cards'][0]['cardId']}\n {js['data']['cards'][0]['name']}\n"
+                        "text": f"卡片id:{js['data']['cards'][0]['cardId']}  {js['data']['cards'][0]['forbidden']}\n {js['data']['cards'][0]['name']}\n"
                         # f"jp:{js['data']['cards'][0]['jpName']}\n"
                         # f"en:{js['data']['cards'][0]['enName']}\n"
                     }
@@ -200,6 +203,8 @@ async def send(js):
                 {
                     "type": "image",
                     "data": {
+                        # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
+                        # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
                         "file": f"base64://{str(image_to_base64(Image.open(BytesIO(requests.get(pics_url).content))), encoding='utf-8')}"
                     }
                 }
