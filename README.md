@@ -10,6 +10,8 @@
  
 提供的支持
 
+小蓝集中营：144718588 （搭建咨询群，进群问题有一定门槛）
+
 ## 0.文件准备
 进入https://github.com/fireinsect/ocg-bot 点上⭐并下载ocg-bot主体
 
