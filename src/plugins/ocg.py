@@ -1,17 +1,22 @@
-import os
 import random
 import re
 import json
+
+import nonebot
 import requests
+from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
-from nonebot.adapters.cqhttp import Message, Event, Bot
-from nonebot import on_command, on_regex
+from nonebot.adapters.cqhttp import Message, Event, Bot, GroupMessageEvent, PrivateMessageEvent, GROUP_ADMIN, \
+    GROUP_OWNER
+from nonebot import on_command
 from src.libraries.image import *
-from src.libraries.raiseCard import draw_card_text
 from src.libraries.tool import hash
+from src.libraries.permissionManage import PermissionManager
 
 oriurl = "http://ocgcard.fireinsect.top/"
 # oriurl = "http://localhost:3399/"
+
+pm = PermissionManager()
 
 noSearchText = [
     "没找到捏~ 欧尼酱~",
@@ -35,6 +40,17 @@ def card_txt(card, no):
             }
         }
     ])
+
+
+def verifySid(sid: str):
+    try:
+        sType, sId = sid.split('_')
+        if sType in ['group', 'user']:
+            if sId.isdigit():
+                return True
+        return False
+    except:
+        return False
 
 
 ocghelp = on_command('ygo help', aliases={'ygo 帮助', 'ygohelp', 'ygo帮助'})
@@ -143,13 +159,26 @@ randomCard = on_command('随机一卡', aliases={'抽一张卡'})
 
 @randomCard.handle()
 async def _(bot: Bot, event: Event, state: T_State):
+    if isinstance(event, PrivateMessageEvent):
+        sessionId = 'user_' + str(event.user_id)
+        userType = 'private'
+    if isinstance(event, GroupMessageEvent):
+        sessionId = 'group_' + str(event.group_id)
+        userType = 'group'
     try:
-        url = oriurl + "randomCard"
-        result = requests.get(url).text
-        js = json.loads(result)
-    except Exception as e:
-        await search_card.send("咿呀？卡组被送进异次元了呢~")
-    await send(js)
+        userType = 'SU' if (str(event.user_id) in nonebot.get_driver().config.superusers) else userType
+        pm.CheckPermission(sessionId, userType)
+        try:
+            url = oriurl + "randomCard"
+            result = requests.get(url).text
+            js = json.loads(result)
+        except Exception as e:
+            await search_card.send("咿呀？卡组被送进异次元了呢~")
+        await send(js)
+    except PermissionError as e:
+        pass
+
+
 
 async def send(js):
     result = ""
@@ -309,6 +338,28 @@ async def _(bot: Bot, event: Event, state: T_State):
                 ] + card_txt(card, no)), at_sender=True)
 
 
+ckpem = on_command("抽卡",permission= GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
 
+
+@ckpem.handle()
+async def cmdArg(bot: Bot, event: Event, state: T_State):
+    message = event.get_message()
+    if 'on' in str(message):
+        state['add_mode'] = True
+    elif 'off' in str(message):
+        state['add_mode'] = False
+    else:
+        await ckpem.finish(f'无效参数: {message}, 请输入 on 或 off 为参数')
+
+
+# 群聊部分自动获取sid
+@ckpem.handle()
+async def group(bot: Bot,event: GroupMessageEvent, state: T_State):
+    pass
+    state['sid'] = 'group_' + str(event.group_id)
+    sid = str(state['sid'])
+    if not verifySid(sid):
+        await ckpem.reject(f"无效目标对象: {sid}")
+    await ckpem.finish(pm.UpdateBanList(sid,state['add_mode']))
 
 obj = requests.get(oriurl + "searchDaily").json()['data']

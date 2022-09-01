@@ -43,12 +43,3 @@ async def _(bot: Bot, event: Event, state: T_State, ):
             "text": f"加入别名收集计划--https://docs.qq.com/sheet/DTWR4bXltbmZiRHdy\n"
         }
     }]))
-
-
-test = on_command("测试")
-
-
-@test.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    state['add_mode'] = True
-    state['add_mode'] = False
