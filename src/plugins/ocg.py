@@ -151,7 +151,6 @@ async def _(bot: Bot, event: Event, state: T_State):
         await search_card.send("咿呀？卡组被送进异次元了呢~")
     await send(js)
 
-
 async def send(js):
     result = ""
     if js['data']['amount'] == 0:
@@ -308,6 +307,8 @@ async def _(bot: Bot, event: Event, state: T_State):
         Message([
                     {"type": "text", "data": {"text": s}}
                 ] + card_txt(card, no)), at_sender=True)
+
+
 
 
 obj = requests.get(oriurl + "searchDaily").json()['data']

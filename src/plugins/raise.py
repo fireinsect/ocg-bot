@@ -2,8 +2,8 @@ import os.path
 
 import requests
 from nonebot.typing import T_State
-from nonebot.adapters.cqhttp import Message, Event, Bot, MessageSegment
-from nonebot import on_command
+from nonebot.adapters.cqhttp import Message, Event, Bot, MessageSegment, GroupRequestEvent, GroupMessageEvent
+from nonebot import on_command ,on_request
 import re
 from src.libraries.image import *
 from src.libraries.raiseCard import draw_card_text
@@ -45,31 +45,10 @@ async def _(bot: Bot, event: Event, state: T_State, ):
     }]))
 
 
-# test = on_command("测试 ")
-#
-#
-# @test.handle()
-# async def _(bot: Bot, event: Event, state: T_State):
-#     regex = "(.+) ([0-9]+)?"
-#     text = str(event.get_message()).strip()
-#     search_group = re.match(regex, text)
-#     try:
-#         print(search_group.groups()[1])
-#     except Exception as e:
-#         print(13123)
-#         text = text + " 1"
-#         search_group = re.match(regex, str(text))
-#     try:
-#         if search_group.groups()[1] is None:
-#             text = text + " 1"
-#             search_group = re.match(regex, str(text))
-#         name = search_group.groups()[0]
-#         print(name)
-#         search_group2 = re.search(r" (?:魔法|怪兽|陷阱)\Z", name)
-#         print(search_group2)
-#         # print(search_group2.group(0))
-#         re.sub(r" (?:魔法|怪兽|陷阱)\Z", "", name)
-#         print("finalName:")
-#         print(name)
-#     except Exception as e:
-#         pass
+test = on_command("测试")
+
+
+@test.handle()
+async def _(bot: Bot, event: Event, state: T_State):
+    state['add_mode'] = True
+    state['add_mode'] = False

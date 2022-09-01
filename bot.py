@@ -34,4 +34,4 @@ nonebot.load_plugins("src/plugins")
 
 
 if __name__ == "__main__":
-    nonebot.run(app="bot:app")
+    nonebot.run(app="bot:app",port=32171)
