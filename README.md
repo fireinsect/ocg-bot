@@ -116,5 +116,5 @@ bot中使用的卡片查询接口在文件中已经标识，随取随用（不�
 <details>
 <summary>点击展开收款码</summary>
 <img style="width: 48%" src="http://ocgcard.daily.fireinsect.top/zfb.jpg">
-<img style="width: 50%" src="http://ocgcard.daily.fireinsect.top/wv.jpg">
+<img style="width: 50%" src="http://ocgcard.daily.fireinsect.top/wx.jpg">
 </details>
