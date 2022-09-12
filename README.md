@@ -111,3 +111,10 @@ Windows环境下，go-cqhttp可以通过双击go-cqhttp.bat文件打开。
 bot随缘更新，有意向的小伙伴可以联系我来一起开发。
 
 bot中使用的卡片查询接口在文件中已经标识，随取随用（不过我的服务器老小水管了，轻点使用谢谢！）
+
+#### 请小虫买包卡？
+<details>
+<summary>点击展开收款码</summary>
+<img style="width: 48%" src="http://ocgcard.daily.fireinsect.top/zfb.jpg">
+<img style="width: 50%" src="http://ocgcard.daily.fireinsect.top/wv.jpg">
+</details>
