@@ -47,7 +47,7 @@ class SearchManager:
     # --------------- 逻辑判断 开始 ---------------
     def CheckType(self, sessionId: str, userType: str = 'group'):
         searchType=self.ReadSearchType(sessionId)
-        if searchType!=1 and searchType != 2:
+        if searchType!=1 and searchType != 2 and searchType != 3:
             raise PermissionError(f'查询失败！')
         else:
             return searchType

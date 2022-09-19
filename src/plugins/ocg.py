@@ -193,13 +193,16 @@ async def _(bot: Bot, event: Event, state: T_State):
     if isinstance(event, PrivateMessageEvent):
         await send2(js)
     elif isinstance(event, GroupMessageEvent):
-        print(event.get_message)
-        if sm.CheckType(sessionId) == 1:
-            await send(js, bot, event)
-        elif sm.CheckType(sessionId) == 2:
-            await send2(js)
+        if js['data']['amount'] == 0:
+            r = random.randint(0, len(noSearchText) - 1)
+            await search_card.send(noSearchText[r])
         else:
-            await send3(js)
+            if sm.CheckType(sessionId) == 1:
+                await send(js, bot, event)
+            elif sm.CheckType(sessionId) == 2:
+                await send2(js)
+            else:
+                await send3(js)
 
 
 # id_card = on_command("查id")
@@ -287,7 +290,7 @@ async def _(bot: Bot, event: Event, state: T_State):
         if i == lend - 1 and flag % 2 == 1:
             s += f'\n'
     card = obj[daily % len(obj)]
-    s += f'查卡方式切换已经实装\n今日{card["type"]}：'
+    s += f'小蓝提醒您：打牌要保持良好心态哟~\n今日{card["type"]}：'
     no = daily % int(card['nums'])
     await dailycard.finish(
         Message([
@@ -342,8 +345,7 @@ async def send(js, bot, event):
                     "data": {
                         # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
                         # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
-                        "file": f"base64://{str(image_to_base64(image_to_base64(img.resize(int(img.size[0] * PANTOGRAPH), int(img.size[1] * PANTOGRAPH)), Image.ANTIALIAS)), encoding='utf-8')}"
-                    }
+                        "file": f"base64://{str(image_to_base64(img.resize((int(img.size[0] * PANTOGRAPH), int(img.size[1] * PANTOGRAPH)), Image.ANTIALIAS)), encoding='utf-8')}"                    }
                 }
             ]))
             msg_list.append(Message([
@@ -387,7 +389,7 @@ async def send(js, bot, event):
             'type': 'node',
             'data': {
                 'name': lanName[r],
-                'uin': event.user_id,
+                'uin': bot.self_id,
                 'content': msg
             }
         })
@@ -491,7 +493,7 @@ async def group(bot: Bot, event: GroupMessageEvent, state: T_State):
 
 
 # 查卡方式
-searchType = on_command("查卡方式", permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
+searchType = on_command("查卡方式")
 
 
 @searchType.handle()
