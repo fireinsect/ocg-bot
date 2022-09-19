@@ -10,18 +10,38 @@ from nonebot.adapters.cqhttp import Message, Event, Bot, GroupMessageEvent, Priv
     GROUP_OWNER
 from nonebot import on_command
 from src.libraries.image import *
+from src.libraries.searchManage import SearchManager
 from src.libraries.tool import hash
 from src.libraries.permissionManage import PermissionManager
 
 oriurl = "http://ocgcard.fireinsect.top/"
 # oriurl = "http://localhost:3399/"
-
+obj = []
 pm = PermissionManager()
+sm = SearchManager()
+
+# ==========工具变量、方法=============================
+# 缩放比例
+PANTOGRAPH = 0.6
 
 noSearchText = [
     "没找到捏~ 欧尼酱~",
     "咦？这张卡不存在呢",
     "哔哔~卡片不存在"
+]
+
+lanName = [
+    "今天有没有好好打牌呢？",
+    "适度打牌，注意休息",
+    "废物小蓝，嗷呜嗷呜",
+    "可可爱爱，没有脑袋",
+    "小蓝(洗衣服ing)",
+    "你看你脏的，让我洗！",
+    "呜，不会打牌唔",
+    "摸鱼的G",
+    "小蓝(非卖品)",
+    "今天堆点什么捏?",
+    "嘟嘟嘟，小蓝警长"
 ]
 
 
@@ -53,6 +73,33 @@ def verifySid(sid: str):
         return False
 
 
+def getResult(car):
+    result = ""
+    result += car['name'] + "\n" + car['type'] + "\nid-" + str(car['cardId']) + " " + car[
+        'forbidden'] + "\n\n"
+    car['effect'] = car['effect'].replace('\r', '')
+    if car['mainType'] == '怪兽':
+        if car['atk'] == "-2":
+            car['atk'] = '?'
+        if car['def'] == "-2":
+            car['def'] = '?'
+
+        if car['def'] is None:
+            result += car['level'] + ' / ' + car[
+                'zz'] + ' / ' + car['attribute'] + "\n" + 'ATK:' + car['atk'] + "\n\n"
+        else:
+            result += car['level'] + ' / ' + car[
+                'zz'] + ' / ' + car['attribute'] + "\n" + 'ATK:' + car['atk'] + ' / DEF:' + car['def'] + "\n\n"
+        # car['effect'] = re.sub(r"(.{50})", "\\1\n", car['effect'])
+        result += car['effect']
+    else:
+        # car['effect'] = re.sub(r"(.{50})", "\\1\n", car['effect'])
+        result += car['effect']
+    return result
+
+
+# ===============功能==================================================
+
 ocghelp = on_command('ygo help', aliases={'ygo 帮助', 'ygohelp', 'ygo帮助'})
 
 
@@ -62,8 +109,8 @@ async def _(bot: Bot, event: Event, state: T_State):
     随机一卡(抽一张卡)
     今日卡运   查看今天打牌运势~
     查卡 ygo卡名 (怪兽|魔法|陷阱) (页码)   查询对应卡牌~
-    en查卡(英文查卡) 英文卡名 (页码)   使用英文查询对应卡牌~
-    查id 卡片id   查询对应id~'''
+    抽卡功能 on | off   开/关抽卡功能(仅限管理)
+    查卡方式 1|2|3  切换查卡方式'''
     await ocghelp.send(Message([{
         "type": "image",
         "data": {
@@ -72,38 +119,47 @@ async def _(bot: Bot, event: Event, state: T_State):
     }]))
 
 
-ensearch_card = on_command("en查卡 ", aliases={'英文查卡 '})
+# ensearch_card = on_command("en查卡", aliases={'英文查卡'})
+#
+#
+# @ensearch_card.handle()
+# async def _(bot: Bot, event: Event, state: T_State):
+#     text = event.get_message()
+#     regex = "(.+) (page)?([0-9]+)?"
+#     search_group = re.match(regex, str(text))
+#     try:
+#         print(search_group.groups()[2])
+#     except Exception as e:
+#         text = text + " 1"
+#         search_group = re.match(regex, str(text))
+#     try:
+#         if search_group.groups()[2] is None:
+#             text = text + " 1"
+#             search_group = re.match(regex, str(text))
+#         name = search_group.groups()[0]
+#         page = search_group.groups()[2]
+#         url = oriurl + "getCardByEn?enName=" + name + "&page=" + page
+#         result = requests.get(url).text
+#         js = json.loads(result)
+#     except Exception as e:
+#         await ensearch_card.send("咿呀？查询失败了呢")
+#     if isinstance(event, PrivateMessageEvent):
+#         await send(js)
+#     elif isinstance(event, GroupMessageEvent):
+#         await send2(js, bot, event)
 
 
-@ensearch_card.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    text = event.get_message()
-    regex = "(.+) (page)?([0-9]+)?"
-    search_group = re.match(regex, str(text))
-    try:
-        print(search_group.groups()[2])
-    except Exception as e:
-        text = text + " 1"
-        search_group = re.match(regex, str(text))
-    try:
-        if search_group.groups()[2] is None:
-            text = text + " 1"
-            search_group = re.match(regex, str(text))
-        name = search_group.groups()[0]
-        page = search_group.groups()[2]
-        url = oriurl + "getCardByEn?enName=" + name + "&page=" + page
-        result = requests.get(url).text
-        js = json.loads(result)
-    except Exception as e:
-        await ensearch_card.send("咿呀？查询失败了呢")
-    await send(js)
-
-
-search_card = on_command("查卡 ")
+search_card = on_command("查卡")
 
 
 @search_card.handle()
 async def _(bot: Bot, event: Event, state: T_State):
+    if isinstance(event, PrivateMessageEvent):
+        sessionId = 'user_' + str(event.user_id)
+        userType = 'private'
+    if isinstance(event, GroupMessageEvent):
+        sessionId = 'group_' + str(event.group_id)
+        userType = 'group'
     regex = "(.+) (page)?([0-9]+)?"
     text = str(event.get_message()).strip()
     search_group = re.match(regex, text)
@@ -133,25 +189,38 @@ async def _(bot: Bot, event: Event, state: T_State):
         js = json.loads(result)
     except Exception as e:
         await search_card.send("咿呀？查询失败了呢")
-    await send(js)
+
+    if isinstance(event, PrivateMessageEvent):
+        await send2(js)
+    elif isinstance(event, GroupMessageEvent):
+        print(event.get_message)
+        if sm.CheckType(sessionId) == 1:
+            await send(js, bot, event)
+        elif sm.CheckType(sessionId) == 2:
+            await send2(js)
+        else:
+            await send3(js)
 
 
-id_card = on_command("查id ")
-
-
-@id_card.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    regex = "([0-9]+)"
-    text = str(event.get_message()).strip()
-    search_group = re.match(regex, text)
-    try:
-        id = search_group.groups()[0]
-        url = oriurl + "searchCardId?cardId=" + id
-        result = requests.get(url).text
-        js = json.loads(result)
-    except Exception as e:
-        await search_card.send("咿呀？查询失败了呢")
-    await send(js)
+# id_card = on_command("查id")
+#
+#
+# @id_card.handle()
+# async def _(bot: Bot, event: Event, state: T_State):
+#     regex = "([0-9]+)"
+#     text = str(event.get_message()).strip()
+#     search_group = re.match(regex, text)
+#     try:
+#         id = search_group.groups()[0]
+#         url = oriurl + "searchCardId?cardId=" + id
+#         result = requests.get(url).text
+#         js = json.loads(result)
+#     except Exception as e:
+#         await search_card.send("咿呀？查询失败了呢")
+#     if isinstance(event, PrivateMessageEvent):
+#         await send(js)
+#     elif isinstance(event, GroupMessageEvent):
+#         await send2(js, bot, event)
 
 
 randomCard = on_command('随机一卡', aliases={'抽一张卡'})
@@ -174,78 +243,9 @@ async def _(bot: Bot, event: Event, state: T_State):
             js = json.loads(result)
         except Exception as e:
             await search_card.send("咿呀？卡组被送进异次元了呢~")
-        await send(js)
+        await send3(js)
     except PermissionError as e:
         pass
-
-
-
-async def send(js):
-    result = ""
-    if js['data']['amount'] == 0:
-        r = random.randint(0, len(noSearchText) - 1)
-        await search_card.send(noSearchText[r])
-    else:
-        for car in js['data']['cards']:
-            result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "    " + car[
-                'forbidden'] + "\n"
-            if car['enName'] is not None:
-                result += "英文卡名-" + car['enName'] + "     " + "日文卡名-" + car['jpName'] + "\n"
-            car['effect'] = car['effect'].replace('\r', '')
-            if car['mainType'] == '怪兽':
-                if car['atk'] == "-2":
-                    car['atk'] = '?'
-                if car['def'] == "-2":
-                    car['def'] = '?'
-
-                if car['def'] is None:
-                    result += car['level'] + ' / ATK: ' + car['atk'] + ' / : ' + car[
-                        'zz'] + ' / ' + car['attribute'] + "\n"
-                else:
-                    result += car['level'] + ' / ATK: ' + car['atk'] + ' / DEF: ' + car['def'] + ' / : ' + car[
-                        'zz'] + ' / ' + car['attribute'] + "\n"
-                car['effect'] = re.sub(r"(.{50})", "\\1\n", car['effect'])
-                result += "效果：" + car['effect'] + "\n"
-                result += "\n"
-                result += "\n"
-            else:
-                car['effect'] = re.sub(r"(.{50})", "\\1\n", car['effect'])
-                result += "效果：" + car['effect'] + "\n"
-                result += "\n"
-                result += "\n"
-        pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
-            js['data']['cards'][0]['cardId']) + '.jpg'
-        # if js['data']['amount'] == 1 and os.path.exists('src/static/pics/' + str(js['data']['cards'][0]['cardId'])
-        # + '.jpg'):
-        if js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
-
-            await search_card.finish(Message([
-                {
-                    "type": "text",
-                    "data": {
-                        "text": f"卡片id:{js['data']['cards'][0]['cardId']}  {js['data']['cards'][0]['forbidden']}\n {js['data']['cards'][0]['name']}\n"
-                        # f"jp:{js['data']['cards'][0]['jpName']}\n"
-                        # f"en:{js['data']['cards'][0]['enName']}\n"
-                    }
-                },
-                {
-                    "type": "image",
-                    "data": {
-                        # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
-                        # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
-                        "file": f"base64://{str(image_to_base64(Image.open(BytesIO(requests.get(pics_url).content))), encoding='utf-8')}"
-                    }
-                }
-            ]))
-        else:
-            page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页", js['data']['amount'], js['data']['nowNum'],
-                                   js['data']['pageNum'])
-            await search_card.finish(Message([{
-                "type": "image",
-                "data": {
-                    "file": f"base64://{str(image_to_base64(text_to_image2(result, page_text)), encoding='utf-8')}"
-                }
-            }]))
 
 
 wm_list = ['同调', '仪式', '融合', '超量', '链接', '灵摆', '顶 G', '重坑', '干饭', '开壶', '唠嗑', '摸鱼']
@@ -255,49 +255,6 @@ dailycard = on_command('今日游戏王', aliases={'今日卡运', '今日牌运
 
 @dailycard.handle()
 async def _(bot: Bot, event: Event, state: T_State):
-    # 520专属
-    # s = f"今日人品值：-999\n"
-    # s += f'忌 出游\n'
-    # s += f'忌 同行\n'
-    # s += f'忌 520\n'
-    # s += f'忌 秀恩爱\n'
-    # s += f'忌 抛洒狗粮\n'
-    # s += f'宜 打牌（人品值+1099）\n'
-    # s += f"小虫告诉您：今天就适合打牌 我说的！\n今日卡牌："
-    # card = {
-    #     'id': 114514,
-    #     'name': "废物"
-    # }
-    # await dailycard.finish(
-    #     Message([
-    #                 {"type": "text", "data": {"text": s}}
-    #             ] + card_txt(card)), at_sender=True)
-
-    # 端午版
-    # qq = int(event.get_user_id())
-    # point = hash(qq)
-    # daily_point_map = point % 100
-    # if daily_point_map < 10:
-    #     daily_point_map += 60
-    # elif daily_point_map < 30:
-    #     daily_point_map += 40
-    # elif daily_point_map < 50:
-    #     daily_point_map += 20
-    # wm_value = []
-    # lend = len(wm_list)
-    # for i in range(lend):
-    #     wm_value.append(point & 2)
-    #     point >>= 2
-    # s = f"今日人品值：{daily_point_map}\n"
-    # for i in range(lend):
-    #     if wm_value[i] == 2:
-    #         s += f'宜 {wm_list[i]}\n'
-    # s += f'宜 吃粽子\n'
-    # if hash(qq)%150>145:
-    #     s += f'宜 找查卡姬唠\n'
-    # card = obj[point % len(obj)]
-    # s += f"今天是端午节哟，快快乐乐才是最重要哒！\n今日{card['type']}："
-
     # 正常版本
     qq = int(event.get_user_id())
     point = hash(qq)
@@ -330,7 +287,7 @@ async def _(bot: Bot, event: Event, state: T_State):
         if i == lend - 1 and flag % 2 == 1:
             s += f'\n'
     card = obj[daily % len(obj)]
-    s += f'小虫提醒您：打牌要保持良好心态哟\n今日{card["type"]}：'
+    s += f'查卡方式切换已经实装\n今日{card["type"]}：'
     no = daily % int(card['nums'])
     await dailycard.finish(
         Message([
@@ -338,15 +295,186 @@ async def _(bot: Bot, event: Event, state: T_State):
                 ] + card_txt(card, no)), at_sender=True)
 
 
-ckpem = on_command("抽卡",permission= GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
+# ==========发送方式=============================
+async def send3(js):
+    pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
+        js['data']['cards'][0]['cardId']) + '.jpg'
+    if js['data']['amount'] == 0:
+        r = random.randint(0, len(noSearchText) - 1)
+        await search_card.send(noSearchText[r])
+    elif js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
+        await search_card.finish(Message([
+            {
+                "type": "text",
+                "data": {
+                    "text": f"卡片id:{js['data']['cards'][0]['cardId']}  {js['data']['cards'][0]['forbidden']}\n {js['data']['cards'][0]['name']}\n"
+                    # f"jp:{js['data']['cards'][0]['jpName']}\n"
+                    # f"en:{js['data']['cards'][0]['enName']}\n"
+                }
+            },
+            {
+                "type": "image",
+                "data": {
+                    # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
+                    # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
+                    "file": f"base64://{str(image_to_base64(Image.open(BytesIO(requests.get(pics_url).content))), encoding='utf-8')}"
+                }
+            }
+        ]))
+    else:
+        send_cards_byCard(js)
+
+
+async def send(js, bot, event):
+    if js['data']['amount'] == 0:
+        r = random.randint(0, len(noSearchText) - 1)
+        await search_card.send(noSearchText[r])
+    else:
+        msg_list = []
+        pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
+            js['data']['cards'][0]['cardId']) + '.jpg'
+        if js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
+            car = js['data']['cards'][0]
+            img = Image.open(BytesIO(requests.get(pics_url).content))
+            msg_list.append(Message([
+                {
+                    "type": "image",
+                    "data": {
+                        # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
+                        # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
+                        "file": f"base64://{str(image_to_base64(image_to_base64(img.resize(int(img.size[0] * PANTOGRAPH), int(img.size[1] * PANTOGRAPH)), Image.ANTIALIAS)), encoding='utf-8')}"
+                    }
+                }
+            ]))
+            msg_list.append(Message([
+                {
+                    "type": "text",
+                    "data": {
+                        "text": getResult(car)
+                    }
+                },
+            ]))
+        else:
+            for car in js['data']['cards']:
+                msg_list.append(Message([
+                    {
+                        "type": "text",
+                        "data": {
+                            "text": getResult(car)
+                        }
+                    },
+                ]))
+            msg_list.append(Message([
+                {
+                    "type": "text",
+                    "data": {
+                        "text": f"欧尼酱！找到了{js['data']['amount']}张卡哟~,当前{js['data']['nowNum']}/{js['data']['pageNum']}页"
+                    }
+                },
+            ]))
+            msg_list.append(Message([
+                {
+                    "type": "text",
+                    "data": {
+                        "text": f"考虑到图片发送问题，只有查到一张卡的时候才会发送卡图哟~"
+                    }
+                },
+            ]))
+    msgs = []
+    r = random.randint(0, len(lanName) - 1)
+    for msg in msg_list:
+        msgs.append({
+            'type': 'node',
+            'data': {
+                'name': lanName[r],
+                'uin': event.user_id,
+                'content': msg
+            }
+        })
+    await bot.call_api('send_group_forward_msg', group_id=event.group_id, messages=msgs)
+
+
+async def send2(js):
+    pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
+        js['data']['cards'][0]['cardId']) + '.jpg'
+    if js['data']['amount'] == 0:
+        r = random.randint(0, len(noSearchText) - 1)
+        await search_card.send(noSearchText[r])
+    elif js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
+        car = js['data']['cards'][0]
+        img = Image.open(BytesIO(requests.get(pics_url).content))
+        await search_card.finish(Message([
+            {
+                "type": "image",
+                "data": {
+                    # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
+                    # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
+                    "file": f"base64://{str(image_to_base64(img.resize((int(img.size[0] * PANTOGRAPH), int(img.size[1] * PANTOGRAPH)), Image.ANTIALIAS)), encoding='utf-8')}"
+                }
+            },
+            {
+                "type": "text",
+                "data": {
+                    "text": getResult(car)
+                }
+            },
+        ]))
+    else:
+        send_cards_byCard(js)
+
+
+async def send_cards_byCard(js):
+    result = ""
+    for car in js['data']['cards']:
+        result += car['name'] + "     " + car['type'] + "    id-" + str(car['cardId']) + "    " + car[
+            'forbidden'] + "\n"
+        if car['enName'] is not None:
+            result += "英文卡名-" + car['enName'] + "     " + "日文卡名-" + car['jpName'] + "\n"
+        car['effect'] = car['effect'].replace('\r', '')
+        if car['mainType'] == '怪兽':
+            if car['atk'] == "-2":
+                car['atk'] = '?'
+            if car['def'] == "-2":
+                car['def'] = '?'
+
+            if car['def'] is None:
+                result += car['level'] + ' / ATK: ' + car['atk'] + ' / : ' + car[
+                    'zz'] + ' / ' + car['attribute'] + "\n"
+            else:
+                result += car['level'] + ' / ATK: ' + car['atk'] + ' / DEF: ' + car['def'] + ' / : ' + car[
+                    'zz'] + ' / ' + car['attribute'] + "\n"
+            car['effect'] = re.sub(r"(.{50})", "\\1\n", car['effect'])
+            result += "效果：" + car['effect'] + "\n"
+            result += "\n"
+            result += "\n"
+        else:
+            car['effect'] = re.sub(r"(.{50})", "\\1\n", car['effect'])
+            result += "效果：" + car['effect'] + "\n"
+            result += "\n"
+            result += "\n"
+
+    page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页", js['data']['amount'], js['data']['nowNum'],
+                           js['data']['pageNum'])
+    await search_card.finish(Message([{
+        "type": "image",
+        "data": {
+            "file": f"base64://{str(image_to_base64(text_to_image2(result, page_text)), encoding='utf-8')}"
+        }
+    }]))
+
+
+# ==========各类开关=============================
+
+# 抽卡开关
+ckpem = on_command("抽卡功能", permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
 
 
 @ckpem.handle()
 async def cmdArg(bot: Bot, event: Event, state: T_State):
     message = event.get_message()
-    if 'on' in str(message):
+    if 'off' in str(message):
         state['add_mode'] = True
-    elif 'off' in str(message):
+    elif 'on' in str(message):
         state['add_mode'] = False
     else:
         await ckpem.finish(f'无效参数: {message}, 请输入 on 或 off 为参数')
@@ -354,12 +482,29 @@ async def cmdArg(bot: Bot, event: Event, state: T_State):
 
 # 群聊部分自动获取sid
 @ckpem.handle()
-async def group(bot: Bot,event: GroupMessageEvent, state: T_State):
-    pass
+async def group(bot: Bot, event: GroupMessageEvent, state: T_State):
     state['sid'] = 'group_' + str(event.group_id)
     sid = str(state['sid'])
     if not verifySid(sid):
         await ckpem.reject(f"无效目标对象: {sid}")
-    await ckpem.finish(pm.UpdateBanList(sid,state['add_mode']))
+    await ckpem.finish(pm.UpdateBanList(sid, state['add_mode']))
+
+
+# 查卡方式
+searchType = on_command("查卡方式", permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
+
+
+@searchType.handle()
+async def seartype(bot: Bot, event: GroupMessageEvent, state: T_State):
+    message = str(event.get_message()).replace(" ", "")
+    state['sid'] = 'group_' + str(event.group_id)
+    sid = str(state['sid'])
+    if message.isdigit():
+        if not verifySid(sid):
+            await searchType.reject(f"无效目标对象: {sid}")
+        await searchType.finish(sm.UpdateSearchType(sid, int(message)))
+    else:
+        await searchType.finish("请选择正确的方式")
+
 
 obj = requests.get(oriurl + "searchDaily").json()['data']

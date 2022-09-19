@@ -6,10 +6,11 @@ except:
     import json
 
 
-class PermissionManager:
+class SearchManager:
     def __init__(self) -> None:
         # 读取全局变量
-        self.path = 'data/ocg_bot/ocg_bot_cfg.json'
+        self.path = 'data/ocg_bot/ocg_bot_search.json'
+        self.search_type = 1
         # 读取perm_cfg
         self.ReadCfg()
 
@@ -35,40 +36,32 @@ class PermissionManager:
     # --------------- 文件读写 开始 ---------------
 
     # --------------- 查询系统 开始 ---------------
-    # 查询黑名单
-    def ReadBanList(self, sessionId):
+    def ReadSearchType(self, sessionId):
         try:
-            return sessionId in self.cfg['ban']
+            return self.cfg[sessionId]['searchType']
         except KeyError:
-            return False
+            return self.search_type
 
     # --------------- 查询系统 结束 ---------------
 
     # --------------- 逻辑判断 开始 ---------------
-    def CheckPermission(self, sessionId: str, userType: str = 'group'):
-        if self.ReadBanList(sessionId):
-            raise PermissionError(f'功能对 {sessionId} 禁用！')
+    def CheckType(self, sessionId: str, userType: str = 'group'):
+        searchType=self.ReadSearchType(sessionId)
+        if searchType!=1 and searchType != 2:
+            raise PermissionError(f'查询失败！')
+        else:
+            return searchType
 
     # --------------- 逻辑判断 结束 ---------------
 
     # --------------- 增删系统 开始 ---------------
-    def UpdateBanList(self, sessionId: str, add_mode: bool):
-        # 加入黑名单
-        if add_mode:
-            try:
-                if sessionId in self.cfg['ban']:
-                    return f'功能已经关闭'
-            except KeyError:
-                self.cfg['ban'] = []
-            self.cfg['ban'].append(sessionId)
-            self.WriteCfg()
-            return f'功能已经关闭'
-        # 移出黑名单
+    def UpdateSearchType(self, sessionId: str, type: int):
+        if type != 1 and type != 2 and type!=3:
+            return "请选择正确查卡方式"
         else:
-            try:
-                self.cfg['ban'].remove(sessionId)
-                self.WriteCfg()
-                return f'功能已经开启'
-            except ValueError:
-                return f'功能已经开启'
+            if not sessionId in self.cfg.keys():
+                self.cfg[sessionId] = {}
+            self.cfg[sessionId]['searchType'] = type
+            self.WriteCfg()
+            return f'查卡方式已更新为方法{type}'
         # --------------- 增删系统 结束 ---------------

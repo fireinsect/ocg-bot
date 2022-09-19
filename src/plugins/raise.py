@@ -43,3 +43,20 @@ async def _(bot: Bot, event: Event, state: T_State, ):
             "text": f"加入别名收集计划--https://docs.qq.com/sheet/DTWR4bXltbmZiRHdy\n"
         }
     }]))
+
+# @text.handle()
+# async def _(bot:Bot,event:Event,state:T_State):
+#     await text.finish(Message([
+#         {
+#           "type": "text",
+#           "data": {
+#               "text":"123123"
+#           }
+#         },
+#         {
+#             "type": "image",
+#             "data": {
+#                 "file": f"http://ocgcard.daily.fireinsect.top/deck/54/54-1.jpg"
+#             }
+#         }
+#     ]))
