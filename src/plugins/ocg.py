@@ -197,12 +197,32 @@ async def _(bot: Bot, event: Event, state: T_State):
             r = random.randint(0, len(noSearchText) - 1)
             await search_card.send(noSearchText[r])
         else:
-            if sm.CheckType(sessionId) == 1:
-                await send(js, bot, event)
-            elif sm.CheckType(sessionId) == 2:
+            typee = sm.CheckType(sessionId)
+            state['type'] = typee
+            state['js'] = js
+            if typee == 1:
                 await send2(js)
+            elif typee == 2:
+                await send(js, bot, event)
             else:
                 await send3(js)
+
+
+@search_card.got("num")
+async def _(bot: Bot, event: Event, state: T_State):
+    num = str(state['num'])
+    typee = int(state['type'])
+    js = state['js']
+    len = int(js['data']['amount'])
+    if num.isdigit():
+        chose = int(num)
+        if 1 <= chose <= len:
+            if typee == 1:
+                await send2(js, chose)
+            elif typee == 2:
+                await send(js, bot, event, chose)
+            else:
+                await send3(js, chose)
 
 
 # id_card = on_command("查id")
@@ -299,44 +319,40 @@ async def _(bot: Bot, event: Event, state: T_State):
 
 
 # ==========发送方式=============================
-async def send3(js):
-    pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
-        js['data']['cards'][0]['cardId']) + '.jpg'
+# 合并消息方式
+async def send(js, bot, event, num=0):
     if js['data']['amount'] == 0:
         r = random.randint(0, len(noSearchText) - 1)
-        await search_card.send(noSearchText[r])
-    elif js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
-        await search_card.finish(Message([
-            {
-                "type": "text",
-                "data": {
-                    "text": f"卡片id:{js['data']['cards'][0]['cardId']}  {js['data']['cards'][0]['forbidden']}\n {js['data']['cards'][0]['name']}\n"
-                    # f"jp:{js['data']['cards'][0]['jpName']}\n"
-                    # f"en:{js['data']['cards'][0]['enName']}\n"
-                }
-            },
-            {
-                "type": "image",
-                "data": {
-                    # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
-                    # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
-                    "file": f"base64://{str(image_to_base64(Image.open(BytesIO(requests.get(pics_url).content))), encoding='utf-8')}"
-                }
-            }
-        ]))
-    else:
-        send_cards_byCard(js)
-
-
-async def send(js, bot, event):
-    if js['data']['amount'] == 0:
-        r = random.randint(0, len(noSearchText) - 1)
-        await search_card.send(noSearchText[r])
+        await search_card.finish(noSearchText[r])
     else:
         msg_list = []
         pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
             js['data']['cards'][0]['cardId']) + '.jpg'
-        if js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
+        if num != 0:
+            num = num - 1
+            pics_choose_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
+                js['data']['cards'][num]['cardId']) + '.jpg'
+            if requests.head(pics_choose_url).status_code == requests.codes.ok:
+                car = js['data']['cards'][num - 1]
+                img = Image.open(BytesIO(requests.get(pics_choose_url).content))
+                msg_list.append(Message([
+                    {
+                        "type": "image",
+                        "data": {
+                            # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
+                            # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
+                            "file": f"base64://{str(image_to_base64(img.resize((int(img.size[0] * PANTOGRAPH), int(img.size[1] * PANTOGRAPH)), Image.ANTIALIAS)), encoding='utf-8')}"}
+                    }
+                ]))
+                msg_list.append(Message([
+                    {
+                        "type": "text",
+                        "data": {
+                            "text": getResult(car)
+                        }
+                    },
+                ]))
+        elif js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
             car = js['data']['cards'][0]
             img = Image.open(BytesIO(requests.get(pics_url).content))
             msg_list.append(Message([
@@ -345,7 +361,7 @@ async def send(js, bot, event):
                     "data": {
                         # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
                         # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
-                        "file": f"base64://{str(image_to_base64(img.resize((int(img.size[0] * PANTOGRAPH), int(img.size[1] * PANTOGRAPH)), Image.ANTIALIAS)), encoding='utf-8')}"                    }
+                        "file": f"base64://{str(image_to_base64(img.resize((int(img.size[0] * PANTOGRAPH), int(img.size[1] * PANTOGRAPH)), Image.ANTIALIAS)), encoding='utf-8')}"}
                 }
             ]))
             msg_list.append(Message([
@@ -381,6 +397,12 @@ async def send(js, bot, event):
                         "text": f"考虑到图片发送问题，只有查到一张卡的时候才会发送卡图哟~"
                     }
                 },
+                {
+                    "type": "text",
+                    "data": {
+                        "text": f"输入数字可以选择搜索结果捏！"
+                    }
+                }
             ]))
     msgs = []
     r = random.randint(0, len(lanName) - 1)
@@ -396,12 +418,36 @@ async def send(js, bot, event):
     await bot.call_api('send_group_forward_msg', group_id=event.group_id, messages=msgs)
 
 
-async def send2(js):
+# 出现完整效果的方式
+async def send2(js, num=0):
     pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
         js['data']['cards'][0]['cardId']) + '.jpg'
     if js['data']['amount'] == 0:
         r = random.randint(0, len(noSearchText) - 1)
-        await search_card.send(noSearchText[r])
+        await search_card.finish(noSearchText[r])
+    elif num != 0:
+        num = num - 1
+        pics_choose_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
+            js['data']['cards'][num]['cardId']) + '.jpg'
+        if requests.head(pics_choose_url).status_code == requests.codes.ok:
+            car = js['data']['cards'][num]
+            img = Image.open(BytesIO(requests.get(pics_choose_url).content))
+            await search_card.finish(Message([
+                {
+                    "type": "image",
+                    "data": {
+                        # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
+                        # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
+                        "file": f"base64://{str(image_to_base64(img.resize((int(img.size[0] * PANTOGRAPH), int(img.size[1] * PANTOGRAPH)), Image.ANTIALIAS)), encoding='utf-8')}"
+                    }
+                },
+                {
+                    "type": "text",
+                    "data": {
+                        "text": getResult(car)
+                    }
+                },
+            ]))
     elif js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
         car = js['data']['cards'][0]
         img = Image.open(BytesIO(requests.get(pics_url).content))
@@ -422,7 +468,61 @@ async def send2(js):
             },
         ]))
     else:
-        send_cards_byCard(js)
+        await send_cards_byCard(js)
+
+
+# 单卡图方式
+async def send3(js, num=0):
+    pics_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
+        js['data']['cards'][0]['cardId']) + '.jpg'
+    if js['data']['amount'] == 0:
+        r = random.randint(0, len(noSearchText) - 1)
+        await search_card.finish(noSearchText[r])
+    elif num != 0:
+        num = num - 1
+        pics_choose_url = 'http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/' + str(
+            js['data']['cards'][num]['cardId']) + '.jpg'
+        if requests.head(pics_choose_url).status_code == requests.codes.ok:
+            await search_card.finish(Message([
+                {
+                    "type": "text",
+                    "data": {
+                        "text": f"卡片id:{js['data']['cards'][num]['cardId']}  {js['data']['cards'][num]['forbidden']}\n {js['data']['cards'][num]['name']}\n"
+                        # f"jp:{js['data']['cards'][0]['jpName']}\n"
+                        # f"en:{js['data']['cards'][0]['enName']}\n"
+                    }
+                },
+                {
+                    "type": "image",
+                    "data": {
+                        # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
+                        # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
+                        "file": f"base64://{str(image_to_base64(Image.open(BytesIO(requests.get(pics_choose_url).content))), encoding='utf-8')}"
+                    }
+                }
+            ]))
+
+    elif js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
+        await search_card.finish(Message([
+            {
+                "type": "text",
+                "data": {
+                    "text": f"卡片id:{js['data']['cards'][0]['cardId']}  {js['data']['cards'][0]['forbidden']}\n {js['data']['cards'][0]['name']}\n"
+                    # f"jp:{js['data']['cards'][0]['jpName']}\n"
+                    # f"en:{js['data']['cards'][0]['enName']}\n"
+                }
+            },
+            {
+                "type": "image",
+                "data": {
+                    # "file": f"base64://{str(image_to_base64(Image.open('src/static/pics/' + str(js['data'][
+                    # 'cards'][0]['cardId']) + '.jpg')), encoding='utf-8')}"
+                    "file": f"base64://{str(image_to_base64(Image.open(BytesIO(requests.get(pics_url).content))), encoding='utf-8')}"
+                }
+            }
+        ]))
+    else:
+        await send_cards_byCard(js)
 
 
 async def send_cards_byCard(js):
@@ -455,9 +555,9 @@ async def send_cards_byCard(js):
             result += "\n"
             result += "\n"
 
-    page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页", js['data']['amount'], js['data']['nowNum'],
+    page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页     输入数字可以选择搜索结果捏！", js['data']['amount'], js['data']['nowNum'],
                            js['data']['pageNum'])
-    await search_card.finish(Message([{
+    await search_card.send(Message([{
         "type": "image",
         "data": {
             "file": f"base64://{str(image_to_base64(text_to_image2(result, page_text)), encoding='utf-8')}"
