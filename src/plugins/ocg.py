@@ -1,9 +1,12 @@
+import io
 import random
 import re
 import json
 
 import nonebot
+import numpy
 import requests
+from matplotlib import pyplot as plt
 from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
 from nonebot.adapters.cqhttp import Message, Event, Bot, GroupMessageEvent, PrivateMessageEvent, GROUP_ADMIN, \
@@ -300,6 +303,8 @@ async def seartype(bot: Bot, event: GroupMessageEvent, state: T_State):
         await searchType.finish(sm.UpdateSearchType(sid, int(message)))
     else:
         await searchType.finish("请选择正确的方式")
+
+
 
 
 obj = requests.get(oriurl + "searchDaily").json()['data']
