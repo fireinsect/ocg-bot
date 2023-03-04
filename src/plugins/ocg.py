@@ -50,6 +50,8 @@ async def _(bot: Bot, event: Event, state: T_State):
     随机一卡(抽一张卡)
     今日卡运   查看今天打牌运势~
     查卡 ygo卡名 (怪兽|魔法|陷阱) (页码)   查询对应卡牌~
+    价格查询 卡名 (页码)    查询集换社价格
+    查询饼图    查询ygo饼图
     抽卡功能 on | off   开/关抽卡功能(仅限管理)
     查卡方式 1|2|3  切换查卡方式'''
     await ocghelp.send(Message([{
