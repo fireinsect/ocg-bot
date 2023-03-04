@@ -30,10 +30,10 @@ async def test(bot: Bot, event: Event, state: T_State):
     plt.rcParams['font.sans-serif'] = prop.get_name()
     plt.rcParams['axes.unicode_minus'] = False
     for index, item in enumerate(pie_date):
-        if index < 6:
+        if index < 11:
             date_list.append(str(item['name']))
             count_list.append(int(item['count']))
-        elif index < 12:
+        else:
             elseCount += int(item['count'])
     date_list.append("其他")
     count_list.append(elseCount)
@@ -70,23 +70,23 @@ async def test(bot: Bot, event: Event, state: T_State):
 
     img_back = Image.open("src/static/pie_back.png")
 
-    height, width = img.size
+    pie_width, pie_height = img.size
 
-    height2, width2 = img_back.size
+    back_width, back_height = img_back.size
 
-    loca = (int((height2 - height) / 2), int((width2 - width) / 2))
+    loca = (int((back_width - pie_width) / 2), int((back_height - pie_height) / 2))
 
     img_back.paste(img, loca, mask=img)
 
-    # =========备注添加
+    # =========备注添加==============
     source = ImageFont.truetype(font_path, 15)
     timefont = ImageFont.truetype(font_path, 25)
     time_up = pie_date[0]['recent_time']
     draw = ImageDraw.Draw(img_back)
 
-    draw.text((int(height2 * 0.7), int(width2 * 0.05)), "数据来源:萌卡数据库", fill=(0, 0, 0), font=source)
-    draw.text((int(height2 * 0.1), int(width2 * 0.9)), '更新时间：'+time_up.split("T")[0], fill=(0, 0, 0), font=timefont)
-    # =========发送
+    draw.text((int(back_width * 0.7), int(back_height * 0.05)), "数据来源:萌卡数据库", fill=(0, 0, 0), font=source)
+    draw.text((int(back_width * 0.1), int(back_height * 0.9)), '更新时间：'+time_up.split("T")[0], fill=(0, 0, 0), font=timefont)
+    # =========发送==============
     await pieChartSearch.finish(Message([{
         "type": "image",
         "data": {

@@ -3,7 +3,6 @@ from io import BytesIO
 
 from PIL import ImageFont, ImageDraw, Image
 
-
 fontpath = "src/static/msyh.ttc"
 
 
@@ -39,9 +38,10 @@ def text_to_image(text):
         draw.text((padding, padding + j * (margin + h)), text, font=font, fill=(0, 0, 0))
     return i
 
-def text_to_image2(text,page_text):
+
+def text_to_image2(text, page_text):
     font = ImageFont.truetype(fontpath, 28)
-    font_page=ImageFont.truetype(fontpath, 30)
+    font_page = ImageFont.truetype(fontpath, 30)
     padding = 30
     margin = 33
     text_list = text.split('\n')
@@ -49,14 +49,44 @@ def text_to_image2(text,page_text):
     for text in text_list:
         w, h = font.getsize(text)
         max_width = max(max_width, w)
-    wa = max_width + padding * 2
-    ha = h * len(text_list)+h + margin * (len(text_list)) + padding * 2
+    wa = max_width + padding * 2 + 100
+    ha = h * len(text_list) + h + margin * (len(text_list)) + padding * 2
     i = Image.new('RGB', (wa, ha), color=(255, 255, 255))
     draw = ImageDraw.Draw(i)
     for j in range(len(text_list)):
         text = text_list[j]
         draw.text((padding, padding + j * (margin + h)), text, font=font, fill=(0, 0, 0))
     draw.text((padding, padding + j * (margin + h)), page_text, font=font_page, fill=(0, 0, 0))
+    return i
+
+
+def text_to_image_with_back(text, page_text,title):
+    font = ImageFont.truetype(fontpath, 28)
+    font_title=ImageFont.truetype("src/static/qmzl.ttf",50)
+    font_page = ImageFont.truetype(fontpath, 30)
+    padding = 30
+    margin = 33
+    text_list = text.split('\n')
+    max_width = 0
+    title_w, title_h = font_title.getsize(title)
+    for text in text_list:
+        w, h = font.getsize(text)
+        max_width = max(max_width, w)
+    max_width = max(max_width, font.getsize(page_text)[0])
+    max_width=max(max_width,title_w)
+    wa = max_width + padding * 2 + 100
+    ha = h * len(text_list) + h + margin * (len(text_list)) + padding * 2+title_h+int(title_h*0.8)
+    i = Image.open("src/static/background.png")
+    change = max(ha / i.height, wa / i.width)
+    i = i.resize((int(i.width * change), int(i.height * change)), Image.ANTIALIAS)
+    i = i.crop(
+        (int(i.width / 2 - wa / 2), int(i.height / 2 - ha / 2), int(i.width / 2 + wa / 2), int(i.height / 2 + ha / 2)))
+    draw = ImageDraw.Draw(i)
+    draw.text((int(i.width/2-title_w/2), padding), title, font=font_title, fill=(0, 0, 0))
+    for j in range(len(text_list)):
+        text = text_list[j]
+        draw.text((padding, padding + j * (margin + h)+margin+title_h), text, font=font, fill=(0, 0, 0))
+    draw.text((padding, padding + j * (margin + h)+margin+title_h), page_text, font=font_page, fill=(0, 0, 0))
     return i
 
 
