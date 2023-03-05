@@ -4,7 +4,7 @@ from io import BytesIO
 from PIL import ImageFont, ImageDraw, Image
 
 fontpath = "src/static/msyh.ttc"
-
+background=Image.open("src/static/background.png")
 
 def draw_text(img_pil, text, offset_x):
     draw = ImageDraw.Draw(img_pil)
@@ -51,7 +51,12 @@ def text_to_image2(text, page_text):
         max_width = max(max_width, w)
     wa = max_width + padding * 2 + 100
     ha = h * len(text_list) + h + margin * (len(text_list)) + padding * 2
-    i = Image.new('RGB', (wa, ha), color=(255, 255, 255))
+    # i = Image.new('RGB', (wa, ha), color=(255, 255, 255))
+    i = background
+    change = max(ha / i.height, wa / i.width)
+    i = i.resize((int(i.width * change), int(i.height * change)), Image.ANTIALIAS)
+    i = i.crop(
+        (int(i.width / 2 - wa / 2), int(i.height / 2 - ha / 2), int(i.width / 2 + wa / 2), int(i.height / 2 + ha / 2)))
     draw = ImageDraw.Draw(i)
     for j in range(len(text_list)):
         text = text_list[j]
@@ -76,7 +81,7 @@ def text_to_image_with_back(text, page_text,title):
     max_width=max(max_width,title_w)
     wa = max_width + padding * 2 + 100
     ha = h * len(text_list) + h + margin * (len(text_list)) + padding * 2+title_h+int(title_h*0.8)
-    i = Image.open("src/static/background.png")
+    i = background
     change = max(ha / i.height, wa / i.width)
     i = i.resize((int(i.width * change), int(i.height * change)), Image.ANTIALIAS)
     i = i.crop(
