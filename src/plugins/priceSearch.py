@@ -31,21 +31,22 @@ async def _(bot: Bot, event: Event, state: T_State):
         url = gradeUrl + "&keyword={0}&page={1}".format(name, page)
         result = requests.get(url).json()
         page_text = "找到了{0}条数据哟~,当前{1}/{2}页 数据来源：集换社".format(result['total'], result['current_page'],
-                                                    result['last_page'])
+                                                             result['last_page'])
 
         await priceSearch.send(Message([{
             "type": "image",
             "data": {
-                "file": f"base64://{str(image_to_base64(text_to_image_with_back(getPriceStr(result), page_text,'价格表')), encoding='utf-8')}"
+                "file": f"base64://{str(image_to_base64(text_to_image_with_back(getPriceStr(result), page_text, '价格表')), encoding='utf-8')}"
             }
         }]))
     except Exception as e:
         e.with_traceback()
         await priceSearch.finish("咿呀？查询失败了呢")
 
+
 def getPriceStr(json):
     result = ""
     for item in json['data']:
         result += "{0} {1}   {4}￥起 \n名称：{2} {3} \n\n".format(item['number'], item['rarity'], item['name_cn'],
-                                                         item['name_origin'], item['min_price'])
+                                                             item['name_origin'], item['min_price'])
     return result

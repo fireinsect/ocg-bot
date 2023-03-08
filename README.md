@@ -19,8 +19,8 @@
 ## 1.安装Python
 
 前往 https://www.python.org/ 下载python，并添加进环境变量
-Windows系统下载专供Windows的python，如果的linux系统选择下载Linux用python，并按照Linux的方法配置环境变量。
-
+Windows系统下载专供Windows的python，如果是linux系统选择下载Linux用python，并按照Linux的方法配置环境变量。
+> 因为依赖版本较低（主要是我懒得换了），Python版本过高可能会导致依赖安装失败，请使用3.8.5左右的Python版本（具体范围没测试过）
 ## 2.运行项目
 
 1. 进入cmd界面或者powershell界面，通过cd进入项目文件夹。
@@ -113,7 +113,7 @@ bot随缘更新，有意向的小伙伴可以联系我来一起开发。
 bot中使用的卡片查询接口在文件中已经标识，随取随用（不过我的服务器老小水管了，轻点使用谢谢！）
 
 #### 请小虫买包卡？
-<details>
+<details open>
 <summary>点击展开收款码</summary>
 <img style="width: 48%" src="http://ocgcard.daily.fireinsect.top/zfb.jpg">
 <img style="width: 50%" src="http://ocgcard.daily.fireinsect.top/wx.jpg">
