@@ -10,8 +10,8 @@ from matplotlib import pyplot as plt
 from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
 from nonebot.adapters.cqhttp import Message, Event, Bot, GroupMessageEvent, PrivateMessageEvent, GROUP_ADMIN, \
-    GROUP_OWNER
-from nonebot import on_command
+    GROUP_OWNER, MessageSegment
+from nonebot import on_command, on_regex
 from src.libraries.image import *
 from src.libraries.searchManage import SearchManager
 from src.libraries.sendAction import *
@@ -53,6 +53,7 @@ async def _(bot: Bot, event: Event, state: T_State):
     价格查询 卡名 (页码)    查询集换社价格
     查询饼图    查询ygo饼图
     抽卡功能 on | off   开/关抽卡功能(仅限管理)
+    抽卡cd (数字)   设置抽卡cd(仅限管理)
     查卡方式 1|2|3  切换查卡方式'''
     await ocghelp.send(Message([{
         "type": "image",
@@ -96,7 +97,7 @@ search_card = on_command("查卡")
 
 
 @search_card.handle()
-async def _0(bot: Bot, event: Event, state: T_State):
+async def _(bot: Bot, event: Event, state: T_State):
     if isinstance(event, PrivateMessageEvent):
         sessionId = 'user_' + str(event.user_id)
         userType = 'private'
@@ -136,7 +137,7 @@ async def _0(bot: Bot, event: Event, state: T_State):
         await search_card.finish("咿呀？查询失败了呢")
     state['js'] = js
     if js['data']['amount'] == 0:
-        sendNosearch(search_card)
+        await sendNosearch(search_card)
     elif isinstance(event, PrivateMessageEvent):
         await send2(js, search_card)
     elif isinstance(event, GroupMessageEvent):
@@ -150,7 +151,7 @@ async def _0(bot: Bot, event: Event, state: T_State):
             await send3(js, search_card)
 
 
-@search_card.got("num")
+@search_card.got("num", prompt="欧尼酱~输入数字选择需要查看的卡片~")
 async def _(bot: Bot, event: Event, state: T_State):
     num = str(state['num'])
     if num.isdigit():
@@ -196,24 +197,29 @@ randomCard = on_command('随机一卡', aliases={'抽一张卡'})
 
 @randomCard.handle()
 async def _(bot: Bot, event: Event, state: T_State):
+    groupSession = None
+    sessionId = None
     if isinstance(event, PrivateMessageEvent):
         sessionId = 'user_' + str(event.user_id)
         userType = 'private'
     if isinstance(event, GroupMessageEvent):
-        sessionId = 'group_' + str(event.group_id)
+        groupSession = 'group_' + str(event.group_id)
+        sessionId = 'user_' + str(event.sender.user_id)
         userType = 'group'
     try:
         userType = 'SU' if (str(event.user_id) in nonebot.get_driver().config.superusers) else userType
-        pm.CheckPermission(sessionId, userType)
-        try:
-            url = oriurl + "randomCard"
-            result = requests.get(url).text
-            js = json.loads(result)
-        except Exception as e:
-            await randomCard.finish("咿呀？卡组被送进异次元了呢~")
-        await send3(js, randomCard)
+        pm.CheckPermission(sessionId, groupSession, userType)
     except PermissionError as e:
-        pass
+        await randomCard.finish(str(e))
+    try:
+        url = oriurl + "randomCard"
+        result = requests.get(url).text
+        js = json.loads(result)
+        pm.UpdateLastSend(sessionId)
+    except Exception as e:
+        await randomCard.finish("咿呀？卡组被送进异次元了呢~")
+    await send3(js, randomCard)
+
 
 
 wm_list = ['同调', '仪式', '融合', '超量', '链接', '灵摆', '顶 G', '重坑', '干饭', '开壶', '唠嗑', '摸鱼']
@@ -257,6 +263,10 @@ async def _(bot: Bot, event: Event, state: T_State):
     card = obj[daily % len(obj)]
     s += f'小蓝提醒您：打牌要保持良好心态哟~\n今日{card["type"]}：'
     no = daily % int(card['nums'])
+    # await dailycard.finish(
+    #     MessageSegment.at(user_id=event.sender.user_id)
+    #     MessageSegment.text(src)
+    # )
     await dailycard.finish(
         Message([
                     {"type": "text", "data": {"text": s}}
@@ -264,6 +274,29 @@ async def _(bot: Bot, event: Event, state: T_State):
 
 
 # ==========各类开关=============================
+
+# ----- 抽卡cd时间更新 -----
+random_cd = on_command("抽卡cd", permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER, block=True, priority=10)
+
+
+# 获取参数
+@random_cd.handle()
+async def cmdArg(bot: Bot, event: Event, state: T_State):
+    message = str(event.get_message()).replace(" ", "")
+    try:
+        state['cdTime'] = int(str(message))
+    except:
+        await random_cd.finish(f'无效参数: {message}, 请输入 正整数 或 0 为参数')
+
+
+# 群聊部分自动获取sid
+@random_cd.handle()
+async def group(bot: Bot, event: GroupMessageEvent, state: T_State):
+    sid = 'group_' + str(event.group_id)
+    if not verifySid(sid):
+        await random_cd.reject(f"无效目标对象: {sid}")
+    await random_cd.finish(pm.UpdateCd(sid, state['cdTime']))
+
 
 # 抽卡开关
 ckpem = on_command("抽卡功能", permission=GROUP_ADMIN | GROUP_OWNER | SUPERUSER)
@@ -305,8 +338,6 @@ async def seartype(bot: Bot, event: GroupMessageEvent, state: T_State):
         await searchType.finish(sm.UpdateSearchType(sid, int(message)))
     else:
         await searchType.finish("请选择正确的方式")
-
-
 
 
 obj = requests.get(oriurl + "searchDaily").json()['data']
