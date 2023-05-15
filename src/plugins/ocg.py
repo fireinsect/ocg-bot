@@ -1,18 +1,12 @@
-import io
-import random
-import re
 import json
 
 import nonebot
-import numpy
-import requests
-from matplotlib import pyplot as plt
+
 from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
-from nonebot.adapters.cqhttp import Message, Event, Bot, GroupMessageEvent, PrivateMessageEvent, GROUP_ADMIN, \
-    GROUP_OWNER, MessageSegment
-from nonebot import on_command, on_regex
-from src.libraries.image import *
+from nonebot.adapters.cqhttp import Event, Bot, GroupMessageEvent, PrivateMessageEvent, GROUP_ADMIN, \
+    GROUP_OWNER
+from nonebot import on_command
 from src.libraries.searchManage import SearchManager
 from src.libraries.sendAction import *
 from src.libraries.tool import hash
@@ -40,27 +34,6 @@ def verifySid(sid: str):
 
 
 # ===============功能==================================================
-
-ocghelp = on_command('ygo help', aliases={'ygo 帮助', 'ygohelp', 'ygo帮助'})
-
-
-@ocghelp.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    txt = '''欧尼酱~你可以对查卡姬说如下命令哟~
-    随机一卡(抽一张卡)
-    今日卡运   查看今天打牌运势~
-    查卡 ygo卡名 (怪兽|魔法|陷阱) (页码)   查询对应卡牌~
-    价格查询 卡名 (页码)    查询集换社价格
-    查询饼图    查询ygo饼图
-    抽卡功能 on | off   开/关抽卡功能(仅限管理)
-    抽卡cd (数字)   设置抽卡cd(仅限管理)
-    查卡方式 1|2|3  切换查卡方式'''
-    await ocghelp.send(Message([{
-        "type": "image",
-        "data": {
-            "file": f"base64://{str(image_to_base64(text_to_image(txt)), encoding='utf-8')}"
-        }
-    }]))
 
 
 # ensearch_card = on_command("en查卡", aliases={'英文查卡'})
@@ -219,7 +192,6 @@ async def _(bot: Bot, event: Event, state: T_State):
     except Exception as e:
         await randomCard.finish("咿呀？卡组被送进异次元了呢~")
     await send3(js, randomCard)
-
 
 
 wm_list = ['同调', '仪式', '融合', '超量', '链接', '灵摆', '顶 G', '重坑', '干饭', '开壶', '唠嗑', '摸鱼']

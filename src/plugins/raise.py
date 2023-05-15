@@ -30,7 +30,6 @@ async def _(bot: Bot, event: Event, state: T_State, ):
         }]))
 
 
-text = on_command('test')
 
 bieming = on_command("别名收集计划")
 
