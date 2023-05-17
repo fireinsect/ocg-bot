@@ -8,7 +8,7 @@ from src.libraries.image import image_to_base64, text_to_image2, text_to_image_w
 
 gradeUrl = "https://api.jihuanshe.com/api/market/search/match-product?game_key=ygo&game_sub_key=ocg&type=card_version"
 
-priceSearch = on_command('集换社查询', aliases={'价格查询'})
+priceSearch = on_command('集换社查询', aliases={'价格查询', '查价格', '查询价格', '查卡价'})
 
 
 @priceSearch.handle()
