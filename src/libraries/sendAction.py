@@ -4,32 +4,12 @@ import re
 import requests
 from nonebot.adapters.cqhttp import Message
 
+from src.libraries.globalMessage import noSearchText, lanName
 from src.libraries.image import *
 
 static_url = "http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/"
 # 缩放比例
 PANTOGRAPH = 0.6
-
-noSearchText = [
-    "没找到捏~ 欧尼酱~",
-    "咦？这张卡不存在呢",
-    "哔哔~卡片不存在"
-]
-
-lanName = [
-    "今天有没有好好打牌呢？",
-    "适度打牌，注意休息",
-    "废物小蓝，嗷呜嗷呜",
-    "可可爱爱，没有脑袋",
-    "小蓝(洗衣服ing)",
-    "你看你脏的，让我洗！",
-    "呜，不会打牌唔",
-    "摸鱼的G",
-    "小蓝(非卖品)",
-    "今天堆点什么捏?",
-    "嘟嘟嘟，小蓝警长"
-]
-
 
 def getResult(car):
     result = ""
@@ -91,13 +71,12 @@ async def send(js, bot, event, func, num=0):
             num = num - 1
             pics_url = static_url + str(
                 js['data']['cards'][num]['cardId']) + '.jpg'
-            if requests.head(pics_url).status_code == requests.codes.ok:
+            if img_exist(pics_url):
                 messageListAppend(js, pics_url, num, msg_list)
-        elif js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
+        elif js['data']['amount'] == 1 and img_exist(pics_url):
             messageListAppend(js, pics_url, num, msg_list)
         else:
             messageListCreate(js, msg_list)
-
     msgs = []
     r = random.randint(0, len(lanName) - 1)
     for msg in msg_list:
@@ -125,9 +104,9 @@ async def send2(js, func, num=0):
         num = num - 1
         pics_url = static_url + str(
             js['data']['cards'][num]['cardId']) + '.jpg'
-        if requests.head(pics_url).status_code == requests.codes.ok:
+        if img_exist(pics_url):
             await func.finish(getAllMessage(js, pics_url, num))
-    elif js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
+    elif js['data']['amount'] == 1 and img_exist(pics_url):
         await func.finish(getAllMessage(js, pics_url, num))
     else:
         await send_cards_byCard(js, func)
@@ -144,9 +123,9 @@ async def send3(js, func, num=0):
         num = num - 1
         pics_url = static_url + str(
             js['data']['cards'][num - 1]['cardId']) + '.jpg'
-        if requests.head(pics_url).status_code == requests.codes.ok:
+        if img_exist(pics_url):
             await func.finish(getPicOnlyMessage(js, num, pics_url))
-    elif js['data']['amount'] == 1 and requests.head(pics_url).status_code == requests.codes.ok:
+    elif js['data']['amount'] == 1 and img_exist(pics_url):
         await func.finish(getPicOnlyMessage(js, num, pics_url))
     else:
         await send_cards_byCard(js, func)
@@ -255,6 +234,10 @@ def getPicOnlyMessage(js, num, url):
     ])
 
 
+# =========判断============
+# 判断图片是否存在
+def img_exist(url):
+    return requests.head(url).status_code == requests.codes.ok
 # =====================
 
 # 图片形式发送多张卡
