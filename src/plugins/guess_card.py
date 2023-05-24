@@ -260,7 +260,7 @@ async def test_(bot: Bot, event: GroupMessageEvent, state: T_State):
             MessageSegment.image(f"base64://{str(image_to_base64(state['image']), encoding='utf-8')}")
         ])
 
-
+#猜卡结果判断
 def isGuessWin(js, cardName, name) -> bool:
     if name is cardName:
         return False
