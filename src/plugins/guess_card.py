@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import random
@@ -7,9 +8,11 @@ from pathlib import Path
 import nonebot
 import requests
 from nonebot.permission import SUPERUSER
+from src.libraries.globalMessage import guess_diff
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))  # 将父级目录加入执行目录列表
 from src.libraries.image import *
+from src.libraries.tool import getRandom
 from nonebot import on_command
 from nonebot.adapters.cqhttp import Bot, Event, GroupMessageEvent, MessageSegment, MessageEvent, PrivateMessageEvent, \
     Message, GROUP_ADMIN, GROUP_OWNER
@@ -30,6 +33,10 @@ cardUrl = "http://fireinsect.top/ocgBot/ocg-bot/src/static/pics/"
 guessCard = on_command('游戏王猜卡', aliases={'猜一张卡'})
 aiguessCard = on_command('ai猜卡')
 gm = guessCardManager()
+RESIZE = guess_diff[0].get("resize")
+CUTSIZE = guess_diff[0].get("cutsize")
+TIME = guess_diff[0].get("time")
+
 
 # ai猜卡常量
 # cardImgPath = "src/static/aicard/"
@@ -85,19 +92,10 @@ def verifySid(sid: str):
 #         state['card'] = card
 #         pics_url = cardImgPath + str(card.cardId) + ".jpg"
 #         image = Image.open(pics_url)
-#         if "灵摆" in card.type:
-#             image = image.crop((30, 110, 370, 357))
-#         else:
-#             image = image.crop((52, 110, 348, 407))
 #         print(card.name)
-#         time = 3
-#         state['time'] = time
+#         state['time'] = TIME
 #         ori_pics_url = cardUrl + str(card.cardId) + ".jpg"
 #         ori_image = Image.open(BytesIO(requests.get(ori_pics_url).content))
-#         if "灵摆" in card.type:
-#             ori_image = ori_image.crop((30, 110, 370, 357))
-#         else:
-#             ori_image = ori_image.crop((52, 110, 348, 407))
 #         state['image'] = ori_image
 #         gm.UpdateLastSend(sessionId)
 #         await guessCard.send([
@@ -188,18 +186,13 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
         pics_url = cardUrl + str(card.cardId) + ".jpg"
         image = Image.open(BytesIO(requests.get(pics_url).content))
         re_image = image
-        RESIZE = 7
         if "灵摆" in card.type:
             image = image.crop((30, 110, 370, 357))
         else:
             image = image.crop((52, 110, 348, 407))
         print(card.name)
-        height, weith = image.size
-        image.thumbnail((height / RESIZE, weith / RESIZE), Image.ANTIALIAS)
-        height, weith = image.size
-        image = image.resize((height * RESIZE, weith * RESIZE))
-        time = 3
-        state['time'] = time
+        image = getGuessImg(image)
+        state['time'] = TIME
         state['image'] = re_image
         gm.UpdateLastSend(sessionId)
         await guessCard.send([
@@ -260,7 +253,8 @@ async def test_(bot: Bot, event: GroupMessageEvent, state: T_State):
             MessageSegment.image(f"base64://{str(image_to_base64(state['image']), encoding='utf-8')}")
         ])
 
-#猜卡结果判断
+
+# 猜卡结果判断
 def isGuessWin(js, cardName, name) -> bool:
     if name is cardName:
         return False
@@ -269,9 +263,25 @@ def isGuessWin(js, cardName, name) -> bool:
             if card['name'] == cardName:
                 return False
     else:
-        if js['data']['cards'][0]['name']==cardName:
+        if js['data']['cards'][0]['name'] == cardName:
             return False
     return True
+
+
+# -----获取猜卡卡图 -----
+def getGuessImg(image: Image, restrict=2) -> Image:
+    height, weight = image.size
+    # 模糊处理
+    if getRandom(restrict) is 1:
+        image.thumbnail((height / RESIZE, weight / RESIZE), Image.ANTIALIAS)
+        height, weight = image.size
+        image = image.resize((height * RESIZE, weight * RESIZE))
+    # 切割处理
+    else:
+        cutHeight, cutWeight = int(image.size[0] / CUTSIZE), int(image.size[1] / CUTSIZE)
+        cutX, cutY = random.randint(cutHeight, height - cutHeight), random.randint(cutWeight, weight - cutWeight)
+        image = image.crop((cutX, cutY, cutX + cutHeight, cutY + cutWeight))
+    return image
 
 
 # ----- 抽卡cd时间更新 -----

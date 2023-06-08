@@ -1,11 +1,11 @@
-random_sendwitchoutcd=[
+random_sendwitchoutcd = [
     "欧尼酱！慢点慢点！",
     "前面的区域之后再来探索吧~",
     "欧尼酱又在抽卡哦~休息一下好不好~",
     "小蓝拒绝了欧尼酱的抽卡(叉腰)~",
     "抽多了对身体不好~",
 ]
-guess_sendwitchoutcd=[
+guess_sendwitchoutcd = [
     "打咩！",
     "前面的区域之后再来探索吧~",
     "欧尼酱！慢点慢点！",
@@ -31,4 +31,12 @@ lanName = [
     "小蓝(非卖品)",
     "今天堆点什么捏?",
     "嘟嘟嘟，小蓝警长"
+]
+# 猜卡难度
+guess_diff = [
+    {
+        'resize': 7,
+        'cutsize': 3,
+        'time': 3
+    }
 ]
