@@ -1,6 +1,5 @@
-import copy
 import json
-import os
+import math
 import random
 import sys
 from pathlib import Path
@@ -278,7 +277,10 @@ def getGuessImg(image: Image, restrict=2) -> Image:
         image = image.resize((height * RESIZE, weight * RESIZE))
     # 切割处理
     else:
-        cutHeight, cutWeight = int(image.size[0] / CUTSIZE), int(image.size[1] / CUTSIZE)
+        sqrt = math.sqrt(CUTSIZE)
+        beSqrt = CUTSIZE / sqrt
+        cut = (sqrt, beSqrt) if getRandom(2) is 1 else (beSqrt, sqrt)
+        cutHeight, cutWeight = int(image.size[0] / cut[0]), int(image.size[1] / cut[1])
         cutX, cutY = random.randint(cutHeight, height - cutHeight), random.randint(cutWeight, weight - cutWeight)
         image = image.crop((cutX, cutY, cutX + cutHeight, cutY + cutWeight))
     return image

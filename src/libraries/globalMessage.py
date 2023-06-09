@@ -36,7 +36,7 @@ lanName = [
 guess_diff = [
     {
         'resize': 7,
-        'cutsize': 3,
+        'cutsize': 6,
         'time': 3
     }
 ]
