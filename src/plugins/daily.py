@@ -90,11 +90,17 @@ def getDailyText(point: int, wm_value):
 
 
 # ---图片拼接---
+#通过不同path来指定字体
 font_path = "src/static/msyh.ttc"
+# 星期显示字体
 fontWeek = ImageFont.truetype(font_path, 35)
+# 宜忌显示字体
 fontList = ImageFont.truetype(font_path, 25)
+# 卡牌信息字体
 fontCardStr = ImageFont.truetype(font_path, 28)
+# 小贴士字体
 fontText = ImageFont.truetype(font_path, 28)
+# 点数字体
 fontPoint = ImageFont.truetype(font_path, 50)
 
 
@@ -103,13 +109,20 @@ def pic_joint(backPic: Image, cardPic: Image, daily: int, extra_text: str, weekd
     draw = ImageDraw.Draw(backPic)
     num_dict = {"0": u"一", "1": u"二", "2": u"三", "3": u"四", "4": u"五", "5": u"六", "6": u"日"}
     week = f"星期{num_dict.get(str(weekday))}"
+    # 文字写入通过不同fill指定颜色
+    # 写入星期
     draw.text((550, 50), week, font=fontWeek, fill=(92, 128, 160))
+    # 写入宜忌
     for i in range(len(proper_list)):
         draw.text((60 + i % 3 * 102, 325 + int(i / 3) * 40), proper_list[i], font=fontList, fill=(92, 128, 160))
     for i in range(len(envy_list)):
         draw.text((60 + i % 3 * 102, 505 + int(i / 3) * 40), envy_list[i], font=fontList, fill=(92, 128, 160))
+    # 写入小贴士
     draw.text(((backPic.width - fontText.size * len(extra_text)) / 2, 690), extra_text, font=fontText,
               fill=(92, 128, 160))
+    # 贴入卡图
     backPic.paste(cardPic.resize((280, 280)), (460, 290))
+    # 写入卡牌信息
     draw.text((430 + (360-fontCardStr.size * len(card_str)) / 2, 580), card_str, font=fontCardStr, fill=(92, 128, 160))
+    # 写入点数
     draw.text((255, 205), str(daily), font=fontPoint, fill=(92, 128, 160))
