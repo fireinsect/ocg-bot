@@ -14,7 +14,6 @@ from src.libraries.permissionManage import PermissionManager
 
 oriurl = "http://ocgcard.fireinsect.top/"
 # oriurl = "http://localhost:3399/"
-obj = []
 pm = PermissionManager()
 sm = SearchManager()
 
@@ -194,57 +193,6 @@ async def _(bot: Bot, event: Event, state: T_State):
     await send3(js, randomCard)
 
 
-wm_list = ['同调', '仪式', '融合', '超量', '链接', '灵摆', '顶 G', '重坑', '干饭', '开壶', '唠嗑', '摸鱼']
-
-dailycard = on_command('今日游戏王', aliases={'今日卡运', '今日牌运'})
-
-
-@dailycard.handle()
-async def _(bot: Bot, event: Event, state: T_State):
-    # 正常版本
-    qq = int(event.get_user_id())
-    point = hash(qq)
-    daily = int(point)
-    daily_point_map = point % 100
-    wm_value = []
-    lend = len(wm_list)
-    for i in range(lend):
-        wm_value.append(point & 3)
-        point >>= 2
-    s = f"今日人品值：{daily_point_map}\n"
-    flag = 0
-    for i in range(lend):
-        if wm_value[i] == 3:
-            s += f'宜 {wm_list[i]}'
-            if flag % 2 == 0:
-                s += '　　'
-                flag += 1
-            else:
-                s += f'\n'
-                flag += 1
-        elif wm_value[i] == 0:
-            s += f'忌 {wm_list[i]}'
-            if flag % 2 == 0:
-                s += '　　'
-                flag += 1
-            else:
-                s += f'\n'
-                flag += 1
-        if i == lend - 1 and flag % 2 == 1:
-            s += f'\n'
-    card = obj[daily % len(obj)]
-    s += f'小蓝提醒您：打牌要保持良好心态哟~\n今日{card["type"]}：'
-    no = daily % int(card['nums'])
-    # await dailycard.finish(
-    #     MessageSegment.at(user_id=event.sender.user_id)
-    #     MessageSegment.text(src)
-    # )
-    await dailycard.finish(
-        Message([
-                    {"type": "text", "data": {"text": s}}
-                ] + card_txt(card, no)), at_sender=True)
-
-
 # ==========各类开关=============================
 
 # ----- 抽卡cd时间更新 -----
@@ -312,4 +260,4 @@ async def seartype(bot: Bot, event: GroupMessageEvent, state: T_State):
         await searchType.finish("请选择正确的方式")
 
 
-obj = requests.get(oriurl + "searchDaily").json()['data']
+
