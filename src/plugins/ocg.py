@@ -76,37 +76,28 @@ async def _(bot: Bot, event: Event, state: T_State):
     if isinstance(event, GroupMessageEvent):
         sessionId = 'group_' + str(event.group_id)
         userType = 'group'
-    regex = "(.+) (page)?([0-9]+)?"
-
+    regex = "(.+) (魔法|怪兽|陷阱)?([0-9]+)?"
     text = str(event.get_message()).strip()
-    search_group = re.match(regex, text)
+    if text == "":
+        await search_card.finish("请输入需要查询的卡名")
     try:
-        print(search_group.groups()[2])
-    except Exception as e:
-        text = text + " 1"
-        search_group = re.match(regex, str(text))
-
-    try:
-        if search_group.groups()[2] is None:
-            text = text + " 1"
-            search_group = re.match(regex, str(text))
-        page = search_group.groups()[2]
-        textNext = search_group.groups()[0]
-        search_group2 = re.search(r" (?:魔法|怪兽|陷阱)\Z", textNext)
-        if search_group2 is None:
-            name = textNext
-            url = oriurl + "getCard?name={0}&page={1}".format(name, page)
+        match = re.match(regex, text)
+        if match:
+            search_group = match.groups()
         else:
-            type = search_group2.group(0).strip()
-            name = re.sub(r" (?:魔法|怪兽|陷阱)\Z", "", textNext).strip()
-            url = oriurl + "getCard?name={0}&type={1}&page={2}".format(name, type, page)
-        print("----------")
-        print(name)
-        print(url)
+            text += " 1"
+            match = re.match(regex, text)
+            search_group = match.groups()
+        state['name'] = search_group[0]
+        state['type'] = search_group[1]
+        state['page'] = search_group[2]
+        url = oriurl + "getCard?name={0}&type={1}&page={2}".format(search_group[0], search_group[1], search_group[2])
         result = requests.get(url).text
         js = json.loads(result)
     except Exception as e:
         await search_card.finish("咿呀？查询失败了呢")
+    if int(search_group[2]) > int(js['data']['pageNum']):
+        await search_card.finish("页码超出最大值" + "`" + str(js['data']['pageNum']) + "`")
     state['js'] = js
     if js['data']['amount'] == 0:
         await sendNosearch(search_card)
@@ -114,7 +105,7 @@ async def _(bot: Bot, event: Event, state: T_State):
         await send2(js, search_card)
     elif isinstance(event, GroupMessageEvent):
         typee = sm.CheckType(sessionId)
-        state['type'] = typee
+        state['send_type'] = typee
         if typee == 1:
             await send2(js, search_card)
         elif typee == 2:
@@ -123,17 +114,17 @@ async def _(bot: Bot, event: Event, state: T_State):
             await send3(js, search_card)
 
 
-@search_card.got("num", prompt="欧尼酱~输入数字选择需要查看的卡片~")
+@search_card.got("text", prompt="欧尼酱~输入任意语句或选择任意卡牌结束本次查卡~")
 async def _(bot: Bot, event: Event, state: T_State):
-    num = str(state['num'])
-    if num.isdigit():
+    text = str(state['text'])
+    js = state['js']
+    if text.isdigit():
         if isinstance(event, PrivateMessageEvent):
             typee = 1
         elif isinstance(event, GroupMessageEvent):
-            typee = int(state['type'])
-        js = state['js']
+            typee = int(state['send_type'])
         len = int(js['data']['amount'])
-        chose = int(num)
+        chose = int(text)
         if 1 <= chose <= len:
             if typee == 1:
                 await send2(js, search_card, chose)
@@ -141,6 +132,46 @@ async def _(bot: Bot, event: Event, state: T_State):
                 await send(js, bot, event, search_card, chose)
             else:
                 await send3(js, search_card, chose)
+    else:
+        name = state['name']
+        type = state['type']
+        page = int(state['page'])
+        url = None
+        print(text)
+        if text == "下一页":
+            if page == js['data']['pageNum']:
+                await search_card.reject("欧尼酱~已经到最后一页了~")
+            else:
+                page = page + 1
+                url = oriurl + "getCard?name={0}&type={1}&page={2}".format(name, type, page)
+                state['page'] = page
+        elif text == "上一页":
+            if page == 1:
+                await search_card.reject("欧尼酱~已经是第一页了~")
+            else:
+                page = page - 1
+                url = oriurl + "getCard?name={0}&type={1}&page={2}".format(name, type, page)
+                state['page'] = page
+        else:
+            await search_card.finish()
+        if url is not None:
+            print("asdasda")
+            result = requests.get(url).text
+            js = json.loads(result)
+            state['js'] = js
+            if js['data']['amount'] == 0:
+                await sendNosearch(search_card)
+            elif isinstance(event, PrivateMessageEvent):
+                await send2(js, search_card)
+            elif isinstance(event, GroupMessageEvent):
+                typee = state['send_type']
+                if typee == 1:
+                    await send2(js, search_card)
+                elif typee == 2:
+                    await send(js, bot, event, search_card)
+                else:
+                    await send3(js, search_card)
+            await search_card.reject("")
 
 
 # id_card = on_command("查id")
@@ -258,6 +289,3 @@ async def seartype(bot: Bot, event: GroupMessageEvent, state: T_State):
         await searchType.finish(sm.UpdateSearchType(sid, int(message)))
     else:
         await searchType.finish("请选择正确的方式")
-
-
-

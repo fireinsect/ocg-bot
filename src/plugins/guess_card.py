@@ -271,7 +271,7 @@ def isGuessWin(js, cardName, name) -> bool:
 def getGuessImg(image: Image, restrict=2) -> Image:
     height, weight = image.size
     # 模糊处理
-    if getRandom(restrict) is 1:
+    if getRandom(restrict) == 1:
         image.thumbnail((height / RESIZE, weight / RESIZE), Image.ANTIALIAS)
         height, weight = image.size
         image = image.resize((height * RESIZE, weight * RESIZE))

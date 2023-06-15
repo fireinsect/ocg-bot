@@ -271,7 +271,7 @@ async def send_cards_byCard(js, func):
             result += "\n"
             result += "\n"
 
-    page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页     输入数字可以选择搜索结果捏！", js['data']['amount'], js['data']['nowNum'],
+    page_text = str.format("找到了{0}张卡哟~,当前{1}/{2}页     输入数字可以选择搜索结果！输入`上一页`/`下一页` 进行翻页~", js['data']['amount'], js['data']['nowNum'],
                            js['data']['pageNum'])
     await func.send(Message([{
         "type": "image",
